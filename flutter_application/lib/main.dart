@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/screens/screen_calendar.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() {
-  runApp(const MyApp());
+
+Future<void> main() async{
+  await initializeDateFormatting('ja_JP').then(
+    (_){
+      runApp(
+       const ProviderScope(
+         child: MyApp(),
+        ),
+      );
+    }
+  );
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -10,6 +23,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -121,5 +135,11 @@ class _MyHomePageState extends State<MyHomePage> {
         color: Colors.pink),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+=======
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ScreenCalendar(),
+      );
+>>>>>>> origin
   }
 }
