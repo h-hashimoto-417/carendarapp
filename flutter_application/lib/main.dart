@@ -23,7 +23,6 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -135,11 +134,5 @@ class _MyHomePageState extends State<MyHomePage> {
         color: Colors.pink),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
-=======
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: ScreenCalendar(),
-      );
->>>>>>> origin
   }
 }
