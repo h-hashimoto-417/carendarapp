@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
       ),
       debugShowCheckedModeBanner: false,
-      home: ScreenCalendar(),
+      home: ScreenHomeToday(),
       );
   }
 }
