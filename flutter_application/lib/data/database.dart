@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 
 enum RepeteType{
   none,
@@ -13,7 +13,7 @@ class Task {
   final int color;
   final RepeteType repete;
   final String? comment;
-  final DateTime dateTime;
+  final DateTime startTime;
 
   const Task({
     required this.title,
@@ -22,7 +22,7 @@ class Task {
     required this.color,
     this.repete = RepeteType.none,
     this.comment,
-    required this.dateTime,
+    required this.startTime,
   });
 
 }

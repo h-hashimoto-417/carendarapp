@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/data/TaskManager.dart';
 import 'package:flutter_application/data/database.dart';
-import 'package:intl/intl.dart';
+
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class ScreenCalendar extends HookConsumerWidget {
@@ -44,13 +43,22 @@ class ScreenCalendar extends HookConsumerWidget {
       );
     }
 
+    List<Task> getTasksForDay(DateTime day) {
+      final tasks = taskProvider
+          .where((task) => isSameDay(task.startTime, day))
+          .toList();
+      tasks.sort((a, b) => a.startTime.compareTo(b.startTime));
+      return tasks;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('カレンダー'),
       ),
+
       body: Column(
         children: [
-          TableCalendar(
+          TableCalendar<Task>(
             firstDay: DateTime.utc(1980, 1, 1),
             lastDay: DateTime.utc(2100, 12, 31),
             focusedDay: focusedDayState.value,
@@ -60,12 +68,10 @@ class ScreenCalendar extends HookConsumerWidget {
             onDaySelected: (selectedDay, focusedDay) {
               selectedDayState.value = selectedDay;
               focusedDayState.value = focusedDay;
-              selectedTasksState.value = taskProvider
-                .where((task) => isSameDay(task.dateTime, selectedDay))
-                .toList();
+              selectedTasksState.value = getTasksForDay(selectedDay);
             },
             eventLoader: (date){
-              return taskProvider.where((task) => isSameDay(task.dateTime, date)).toList();
+              return getTasksForDay(date);
             },
             locale: 'ja_JP',
             headerStyle: const HeaderStyle(
@@ -131,17 +137,20 @@ class ScreenCalendar extends HookConsumerWidget {
               }
             ),
           ),
+          const Divider(height: 1),
           Expanded(
             child: ListView.builder(
               itemCount: selectedTasksState.value.length,
               itemBuilder: (context, index) {
                 final task = selectedTasksState.value[index];
+                final timeText =
+                    '${task.startTime.hour.toString().padLeft(2, '0')}:${task.startTime.minute.toString().padLeft(2, '0')}';
                 return ListTile(
-                  title: Text(task.title),
-                  subtitle: Text('必要時間: ${task.requiredHours}h'),
                   leading: CircleAvatar(
                     backgroundColor: Color(task.color),
                   ),
+                  title: Text('$timeText  ${task.title}'),
+                  subtitle: Text('必要時間: ${task.requiredHours}h'),
                 );
               },
             ),
