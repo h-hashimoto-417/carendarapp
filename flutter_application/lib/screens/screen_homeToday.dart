@@ -29,7 +29,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
           },
         ),
         title: Text(
-          '6月',
+          '6月',  // 日付データを取得する！
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -63,26 +63,30 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
       // ),
 
       body: Stack(
+        clipBehavior: Clip.none,
         children: [
           Column(
             children: [
-              SizedBox(height: 50), // 半円をかぶせる余白を確保
+              SizedBox(height: 0), // 半円をかぶせる余白を確保
               Expanded(
                 child: Center(
                   child: Container(
-                    width: 300,
-                    height: 400,
+                    width: 350,
+                    height: 690,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [BoxShadow(color: Colors.black, blurRadius: 1)],
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color:Colors.black, width: 1),
+                      //boxShadow: [BoxShadow(color: Colors.black, blurRadius: 1)],
                     ),
                     child: SingleChildScrollView(
                       child: Column(
-                        children: List.generate(20, (index) => Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Text('Item $index'),
-                        )),
+                        children: List.generate(25, (index) => Padding(
+                          padding: EdgeInsets.all(25),
+                          child: Align( 
+                            alignment: Alignment.topLeft,
+                            child: Text('$index : 00',),
+                        ))),
                       ),
                     ),
                   ),
@@ -93,26 +97,41 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
 
           // 半円をスクロールウィンドウにかぶせる
           Positioned(
-            top: 5, // スクロールウィンドウにしっかりかぶるように調整
+            top: 0, // スクロールウィンドウにしっかりかぶるように調整
             left: 0,
             right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: Icon(Icons.arrow_left, size: 60, color: Colors.amberAccent),
+                  icon: Icon(Icons.arrow_left, size: 70, color: Colors.amberAccent),
                   onPressed: () {},
                 ),
                 ClipPath(
                   clipper: HalfMoonClipper(), // 修正したクリッパーを適用
                   child: Container(
-                    width: 120, // 少し大きめに調整
-                    height: 60, // 高さを調整
-                    color: Colors.blue,
+                    width: 200, // 少し大きめに調整
+                    height: 100, // 高さを調整
+                    color: const Color.fromARGB(255, 243, 194, 33),
+                    child: Column(
+                      //mainAxisAlignment: MainAxisAlignment.spaceBetween, // 上下に配置
+                      crossAxisAlignment: CrossAxisAlignment.center, // 横方向中央揃え
+                      children: [
+                        Text(
+                          "WED", // 日付データを取得する！
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "25",
+                          style: TextStyle(fontSize: 43, fontWeight: FontWeight.bold),
+                        ),
+
+                      ],
+                    ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.arrow_right, size: 60, color: Colors.amberAccent),
+                  icon: Icon(Icons.arrow_right, size: 70, color: Colors.amberAccent),
                   onPressed: () {},
                 ),
               ],
@@ -130,9 +149,9 @@ class HalfMoonClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     Path path = Path();
-    path.moveTo(0, size.height); // 下部の左端
-    path.arcTo(Rect.fromLTWH(0, 0, size.width, size.height * 2), 0, -3.14, false); // 半円を上向きに描画
-    path.lineTo(size.width, size.height); // 下部の右端へ
+    path.moveTo(0, 0); // 下部の左端
+    path.arcTo(Rect.fromCircle(center: Offset(size.width / 2, 0), radius: size.width / 2), 0, 3.14, false); // 半円を上向きに描画
+    path.lineTo(size.width, 0); // 下部の右端へ
     path.close();
     return path;
   }
