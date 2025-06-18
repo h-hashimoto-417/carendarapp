@@ -14,7 +14,6 @@ class ScreenCalendar extends HookConsumerWidget {
     final selectedDayState = useState(DateTime.now());
     final focusedDayState = useState(DateTime.now());
     final panelController = useMemoized(() => PanelController());
-    final selectedTasksState = useState([]);
     final taskProvider = ref.watch(taskControllerProvider);
     final taskColors = [
     Colors.red,
@@ -52,16 +51,43 @@ class ScreenCalendar extends HookConsumerWidget {
       return tasks;
     }
 
+    List<Widget> buildTaskTitles(DateTime date) {
+      final tasks = getTasksForDay(date);
+      final displayTasks = tasks.take(3).toList();
+
+      if (displayTasks.isEmpty) return [];
+
+      return displayTasks.map((task) {
+        final shortTitle = task.title.length > 5
+          ? task.title.substring(0, 7)
+          : task.title;
+        final colorIndex = task.color.clamp(0, 9);
+        return Text(
+          shortTitle,
+          style: TextStyle(
+            fontSize: 10,
+            color: taskColors[colorIndex],
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      }).toList();
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('カレンダー'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(
+          '${focusedDayState.value.year}',
+          style: TextStyle(color: Colors.black),
+        ),
+        centerTitle: true,
       ),
 
       body: 
       SlidingUpPanel(
         controller: panelController,
         minHeight: 60,
-        maxHeight: MediaQuery.of(context).size.height * 0.5,
+        maxHeight: MediaQuery.of(context).size.height * 0.4,
         panelBuilder: (sc) {
           final tasks = getTasksForDay(selectedDayState.value);
           return Column(
@@ -107,6 +133,7 @@ class ScreenCalendar extends HookConsumerWidget {
             firstDay: DateTime(2000),
             lastDay: DateTime(2100),
             focusedDay: focusedDayState.value,
+            rowHeight: 80,
             selectedDayPredicate: (day) {
               return isSameDay(selectedDayState.value, day);
             },
@@ -130,19 +157,62 @@ class ScreenCalendar extends HookConsumerWidget {
             onPageChanged: (newFocusedDay) {
               focusedDayState.value = newFocusedDay;
             },
+            calendarStyle: const CalendarStyle(
+              outsideDaysVisible: false,
+              tablePadding: EdgeInsets.symmetric(horizontal: 10),
+              cellMargin: EdgeInsets.all(2),
+              cellPadding: EdgeInsets.symmetric(vertical: 4),
+            ),
             calendarBuilders: CalendarBuilders(
-              headerTitleBuilder: (context, day) {
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              selectedBuilder: (context, date, focusedDay) {
+                return Container(
+                  decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blue, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.topCenter,
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
                   children: [
                     Text(
-                      '${focusedDayState.value.year}',
+                      '${date.day}',
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
+                        color: Colors.blue,
                       ),
                     ),
-                    Row(
+                    ...buildTaskTitles(date), // カスタムタスク表示
+                  ],
+                ),
+              );
+            },
+            todayBuilder: (context, date, focusedDay) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.topCenter,
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${date.day}',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
+                    ...buildTaskTitles(date), // カスタムタスク表示
+                  ],
+                ),
+              );
+            },
+              headerTitleBuilder: (context, day) {
+                return Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
@@ -157,30 +227,45 @@ class ScreenCalendar extends HookConsumerWidget {
                           icon: const Icon(Icons.chevron_right),
                           onPressed: goToNextMonth,
                         ),
-                      ],
+                  ],
+                );
+              },
+              defaultBuilder: (context, date, focusedDay) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${date.day}',
+                      style: const TextStyle(
+
+                        fontWeight: FontWeight.bold,                        
+                        fontSize: 17,
+                      ),
                     ),
+                    ...buildTaskTitles(date),
                   ],
                 );
               },
               markerBuilder: (context, date, events) {
-                if (events.isEmpty) return const SizedBox();
+                // if (events.isEmpty) return const SizedBox();
 
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: events.take(3).map((event) {
-                    final task = event as Task;
-                    final colorIndex = task.color.clamp(0, 9);
-                    return Container(
-                      width: 6,
-                      height: 6,
-                      margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: taskColors[colorIndex],
-                      ),
-                    );
-                  }).toList(),
-                );
+                // return Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: events.take(3).map((event) {
+                //     final task = event;
+                //     final colorIndex = task.color.clamp(0, 9);
+                //     return Container(
+                //       width: 6,
+                //       height: 6,
+                //       margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                //       decoration: BoxDecoration(
+                //         shape: BoxShape.circle,
+                //         color: taskColors[colorIndex],
+                //       ),
+                //     );
+                //   }).toList(),
+                // );
+                return const SizedBox.shrink();
               }
             ),
           ),
