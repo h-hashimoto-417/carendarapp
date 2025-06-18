@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/data/TaskManager.dart';
 import 'package:flutter_application/data/database.dart';
-
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -13,6 +13,7 @@ class ScreenCalendar extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDayState = useState(DateTime.now());
     final focusedDayState = useState(DateTime.now());
+    final panelController = useMemoized(() => PanelController());
     final selectedTasksState = useState([]);
     final taskProvider = ref.watch(taskControllerProvider);
     final taskColors = [
@@ -56,11 +57,55 @@ class ScreenCalendar extends HookConsumerWidget {
         title: const Text('カレンダー'),
       ),
 
-      body: Column(
-        children: [
+      body: 
+      SlidingUpPanel(
+        controller: panelController,
+        minHeight: 60,
+        maxHeight: MediaQuery.of(context).size.height * 0.5,
+        panelBuilder: (sc) {
+          final tasks = getTasksForDay(selectedDayState.value);
+          return Column(
+            children: [
+              Container(
+                width: 40,
+                height: 5,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(4)
+                ),
+              ),
+              Text(
+                '${selectedDayState.value.year}/${selectedDayState.value.month}/${selectedDayState.value.day}の予定',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const Divider(),
+              Expanded(
+                child: ListView.builder(
+                  controller: sc,
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return ListTile(
+                      title: Text(
+                        '${task.startTime.hour}時：${task.title}',
+                        ),
+                      subtitle: Text('必要時間：${task.requiredHours}h'),
+                      leading: CircleAvatar(
+                        backgroundColor: Color(task.color),
+                      ),
+                    );
+                  },
+                )
+              )
+            ],
+          );
+        },
+      
+      body: 
           TableCalendar<Task>(
-            firstDay: DateTime.utc(1980, 1, 1),
-            lastDay: DateTime.utc(2100, 12, 31),
+            firstDay: DateTime(2000),
+            lastDay: DateTime(2100),
             focusedDay: focusedDayState.value,
             selectedDayPredicate: (day) {
               return isSameDay(selectedDayState.value, day);
@@ -68,7 +113,9 @@ class ScreenCalendar extends HookConsumerWidget {
             onDaySelected: (selectedDay, focusedDay) {
               selectedDayState.value = selectedDay;
               focusedDayState.value = focusedDay;
-              selectedTasksState.value = getTasksForDay(selectedDay);
+              if (panelController.isPanelClosed) {
+                  panelController.open(); // 日付タップ時にパネル開く
+                }
             },
             eventLoader: (date){
               return getTasksForDay(date);
@@ -137,25 +184,6 @@ class ScreenCalendar extends HookConsumerWidget {
               }
             ),
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView.builder(
-              itemCount: selectedTasksState.value.length,
-              itemBuilder: (context, index) {
-                final task = selectedTasksState.value[index];
-                final timeText =
-                    '${task.startTime.hour.toString().padLeft(2, '0')}:${task.startTime.minute.toString().padLeft(2, '0')}';
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Color(task.color),
-                  ),
-                  title: Text('$timeText  ${task.title}'),
-                  subtitle: Text('必要時間: ${task.requiredHours}h'),
-                );
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
