@@ -43,6 +43,7 @@ dependencies:
   riverpod_generator: ^2.6.5
   build_runner: ^2.4.15
   json_serializable: ^6.9.5
+  sliding_up_panel: ^2.0.0+1
 
 dev_dependencies:
   flutter_test:
