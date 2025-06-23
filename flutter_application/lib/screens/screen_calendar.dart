@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/data/TaskManager.dart';
+import 'package:flutter_application/data/data_manager.dart';
 import 'package:flutter_application/data/database.dart';
 import 'package:flutter_application/screens/screen_homeToday.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -258,7 +258,7 @@ class ScreenCalendar extends HookConsumerWidget {
             todayBuilder: (context, date, focusedDay) {
               return Container(
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.3),
+                  color: Colors.orange,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 alignment: Alignment.topCenter,
@@ -271,7 +271,7 @@ class ScreenCalendar extends HookConsumerWidget {
                       style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        color: Colors.orange,
+                        color: Colors.black,
                       ),
                     ),
                     ...buildTaskTitles(date), // カスタムタスク表示

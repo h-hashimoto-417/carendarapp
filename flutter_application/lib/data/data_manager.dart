@@ -1,12 +1,11 @@
-// ignore: file_names
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:flutter_application/data/database.dart';
 
-part 'TaskManager.g.dart';
+part 'data_manager.g.dart';
 
 @riverpod
+
 
 class TaskController extends _$TaskController{
   final List<Task> sampleTask = [
