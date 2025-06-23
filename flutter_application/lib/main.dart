@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const MyHomePage(title:'carendarapp'),
       routes: {
-        "/todayPage": (BuildContext context) => ScreenHomeToday(),
+        //"/todayPage": (BuildContext context) => ScreenHomeToday(),
         "/carendarPage": (BuildContext context) => ScreenCalendar(),
       }
       );
@@ -50,6 +50,6 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: ScreenHomeToday());
+    return Scaffold(body: ScreenHomeToday(today:DateTime.now()));
   }
 }
