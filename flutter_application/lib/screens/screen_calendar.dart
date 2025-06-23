@@ -47,15 +47,36 @@ class ScreenCalendar extends HookConsumerWidget {
       final List<ScheduledTask> scheduledTasks = [];
 
       for (final task in taskProvider) {
-        if (task.startTime == null) continue;
-          for (final dt in task.startTime!) {
-            if (isSameDay(dt, day)) {
-              scheduledTasks.add(ScheduledTask(task: task, dateTime: dt));
+        final times = task.startTime;
+        if (times == null) continue;
+
+          for (final dt in times) {
+            switch (task.repete) {
+              case RepeteType.none:
+                if (isSameDay(dt, day)) {
+                  scheduledTasks.add(ScheduledTask(task: task, dateTime: dt));
+                }
+              break;
+
+              case RepeteType.daily:
+                // 指定日以降、毎日繰り返す
+                if (dt.isBefore(day) || isSameDay(dt, day)) {
+                  final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
+                  scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
+                }
+                break;
+
+              case RepeteType.weekly:
+                // 指定日以降、毎週同じ曜日に繰り返す
+                if ((dt.isBefore(day) || isSameDay(dt, day)) && dt.weekday == day.weekday) {
+                  final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
+                  scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
+                }
+                break;
             }
           }
       }
 
-  // 開始日時でソート 
       scheduledTasks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
       return scheduledTasks;
     }
