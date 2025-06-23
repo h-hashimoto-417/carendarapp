@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/data/TaskManager.dart';
+import 'package:flutter_application/data/database.dart';
 
 
 class ScreenHomeToday extends StatefulWidget {
-  const ScreenHomeToday({super.key});
+  const ScreenHomeToday({super.key, required this.today});
+  final DateTime today;
 
   @override
   State<ScreenHomeToday> createState() => _ScreenHomeTodayState();
@@ -10,26 +13,54 @@ class ScreenHomeToday extends StatefulWidget {
 
 
 class _ScreenHomeTodayState extends State<ScreenHomeToday> {
-  String  month = '';
+  
+  int countFromToday = 0;
+  int  month = 0;
+  int  day = 0;
+  int  weekday = 0;
+  int count = 0;
 
-  @override
-  void setState(VoidCallback fn) {
-    // TODO: implement setState
+  //@override
+  void _dateTransition() {
+    setState(() {
+      DateTime someday;
+      if(countFromToday == 0) {
+        someday = widget.today;    
+      }else if(countFromToday > 0) {
+        someday = widget.today.add(Duration(days: countFromToday));
+      }
+      else {
+        someday = widget.today.subtract(Duration(days: (-countFromToday)));
+      }
+
+      month = someday.month;
+      day = someday.day;
+      weekday = someday.weekday;
+      count = countFromToday;
+      //print('today: ${widget.today}');
     
+    });
   }
+  
   @override
   Widget build(BuildContext context) {
+
+    DateTime now = DateTime.now();
+    month = now.month;
+    day = now.day;
+    weekday = now.weekday;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         leading: IconButton(
           icon: const Icon(Icons.calendar_month, size: 45), // 左端のアイコン
-          onPressed: () {      // カレンダーアイコンの動作を定義
+          onPressed: () => {      // カレンダーアイコンの動作を定義
+            Navigator.pushNamed(context, "/carendarPage")
           },
         ),
         title: Text(
-          '6月',  // 日付データを取得する！
+          '$month月',  // 日付データを取得する！
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -61,7 +92,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
       //     ),
       //   ),
       // ),
-
+      // スクロールウィンドウの表示
       body: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -105,7 +136,10 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
               children: [
                 IconButton(
                   icon: Icon(Icons.arrow_left, size: 70, color: Colors.amberAccent),
-                  onPressed: () {},
+                  onPressed: () {
+                    countFromToday--;
+                    _dateTransition();
+                  },
                 ),
                 ClipPath(
                   clipper: HalfMoonClipper(), // 修正したクリッパーを適用
@@ -118,11 +152,11 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                       crossAxisAlignment: CrossAxisAlignment.center, // 横方向中央揃え
                       children: [
                         Text(
-                          "WED", // 日付データを取得する！
+                          weekdayName[weekday], // 日付データを取得する！
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "25",
+                          '$count',
                           style: TextStyle(fontSize: 43, fontWeight: FontWeight.bold),
                         ),
 
@@ -132,7 +166,10 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                 ),
                 IconButton(
                   icon: Icon(Icons.arrow_right, size: 70, color: Colors.amberAccent),
-                  onPressed: () {},
+                  onPressed: () {
+                    countFromToday++;
+                    _dateTransition();
+                  },
                 ),
               ],
             ),
