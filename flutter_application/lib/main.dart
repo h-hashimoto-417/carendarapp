@@ -29,7 +29,27 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
       ),
       debugShowCheckedModeBanner: false,
-      home: ScreenHomeToday(),
+      home: const MyHomePage(title:'carendarapp'),
+      routes: {
+        "/todayPage": (BuildContext context) => ScreenHomeToday(),
+        "/carendarPage": (BuildContext context) => ScreenCalendar(),
+      }
       );
+  }
+}
+
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key?key,required this.title}) : super(key: key);
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(body: ScreenHomeToday());
   }
 }

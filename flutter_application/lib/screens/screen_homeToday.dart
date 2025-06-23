@@ -10,7 +10,7 @@ class ScreenHomeToday extends StatefulWidget {
 
 
 class _ScreenHomeTodayState extends State<ScreenHomeToday> {
-  String  month = '';
+  String  month = '6月';
 
   @override
   void setState(VoidCallback fn) {
@@ -25,7 +25,8 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         leading: IconButton(
           icon: const Icon(Icons.calendar_month, size: 45), // 左端のアイコン
-          onPressed: () {      // カレンダーアイコンの動作を定義
+          onPressed: () => {      // カレンダーアイコンの動作を定義
+            Navigator.pushNamed(context, "/carendarPage")
           },
         ),
         title: Text(
