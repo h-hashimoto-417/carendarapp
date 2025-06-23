@@ -43,22 +43,32 @@ class ScreenCalendar extends HookConsumerWidget {
       );
     }
 
-    List<Task> getTasksForDay(DateTime day) {
-      final tasks = taskProvider
-          .where((task) => isSameDay(task.startTime, day))
-          .toList();
-      tasks.sort((a, b) => a.startTime.compareTo(b.startTime));
-      return tasks;
+    List<ScheduledTask> getScheduledTasksForDay(DateTime day) {
+      final List<ScheduledTask> scheduledTasks = [];
+
+      for (final task in taskProvider) {
+        if (task.startTime == null) continue;
+          for (final dt in task.startTime!) {
+            if (isSameDay(dt, day)) {
+              scheduledTasks.add(ScheduledTask(task: task, dateTime: dt));
+            }
+          }
+      }
+
+  // 開始日時でソート 
+      scheduledTasks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+      return scheduledTasks;
     }
 
     List<Widget> buildTaskTitles(DateTime date) {
-      final tasks = getTasksForDay(date);
+      final tasks = getScheduledTasksForDay(date);
       final displayTasks = tasks.take(3).toList();
 
       if (displayTasks.isEmpty) return [];
 
-      return displayTasks.map((task) {
-        final shortTitle = task.title.length > 5
+      return displayTasks.map((scheduledTask) {
+        final task = scheduledTask.task;
+        final shortTitle = task.title.length > 7
           ? task.title.substring(0, 7)
           : task.title;
         final colorIndex = task.color.clamp(0, 9);
@@ -89,7 +99,7 @@ class ScreenCalendar extends HookConsumerWidget {
         minHeight: 60,
         maxHeight: MediaQuery.of(context).size.height * 0.4,
         panelBuilder: (sc) {
-          final tasks = getTasksForDay(selectedDayState.value);
+          final tasks = getScheduledTasksForDay(selectedDayState.value);
           return Column(
             children: [
               Container(
@@ -111,12 +121,12 @@ class ScreenCalendar extends HookConsumerWidget {
                   controller: sc,
                   itemCount: tasks.length,
                   itemBuilder: (context, index) {
-                    final task = tasks[index];
+                    final scheduledTask = tasks[index];
+                    final task = scheduledTask.task;
+                    final dt = scheduledTask.dateTime;
                     return ListTile(
-                      title: Text(
-                        '${task.startTime.hour}時：${task.title}',
-                        ),
-                      subtitle: Text('必要時間：${task.requiredHours}h'),
+                      title: Text('${dt.hour}:00　${task.title}'),
+                      subtitle: Text(task.comment != null? 'コメント：${task.comment}': 'コメントなし'),
                       leading: CircleAvatar(
                         backgroundColor: Color(task.color),
                       ),
@@ -145,7 +155,10 @@ class ScreenCalendar extends HookConsumerWidget {
                 }
             },
             eventLoader: (date){
-              return getTasksForDay(date);
+              return taskProvider.where((task) {
+                final times = task.startTime;
+                return times != null && times.any((dt) => isSameDay(dt, date));
+              }).toList();
             },
             locale: 'ja_JP',
             headerStyle: const HeaderStyle(
