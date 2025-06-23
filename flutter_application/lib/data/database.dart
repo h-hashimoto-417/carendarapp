@@ -1,4 +1,7 @@
 
+// 曜日のデータ
+List<String> weekdayName = ['', 'MON', 'TUE', 'WED', 'THUR', 'FRY', 'SAT', 'SUN'];
+
 
 enum RepeteType{
   none,
