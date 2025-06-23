@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/data/TaskManager.dart';
 import 'package:flutter_application/data/database.dart';
+import 'package:flutter_application/screens/screen_homeToday.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -107,6 +108,16 @@ class ScreenCalendar extends HookConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        leading: 
+          IconButton(
+            icon: Icon(Icons.calendar_today, color: Colors.black, size: 45),
+            onPressed: () { Navigator.push(
+              context, 
+              MaterialPageRoute(builder: (context) => ScreenHomeToday())
+              ); 
+            },
+          ),
+        
         title: Text(
           '${focusedDayState.value.year}',
           style: TextStyle(color: Colors.black),
@@ -121,6 +132,7 @@ class ScreenCalendar extends HookConsumerWidget {
         maxHeight: MediaQuery.of(context).size.height * 0.4,
         panelBuilder: (sc) {
           final tasks = getScheduledTasksForDay(selectedDayState.value);
+          
           return Column(
             children: [
               Container(
@@ -132,9 +144,31 @@ class ScreenCalendar extends HookConsumerWidget {
                   borderRadius: BorderRadius.circular(4)
                 ),
               ),
-              Text(
-                '${selectedDayState.value.year}/${selectedDayState.value.month}/${selectedDayState.value.day}の予定',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Center(
+                      child: 
+                        Text(
+                          '${selectedDayState.value.year}/${selectedDayState.value.month}/${selectedDayState.value.day}の予定',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      child: IconButton(
+                        onPressed: () { 
+                          Navigator.push(
+                            context, 
+                            MaterialPageRoute(builder: (context) => ScreenHomeToday())
+                          );
+                        },
+                        icon: Icon(Icons.visibility, size: 30, color: Colors.black,)),
+                    ),
+                  ],
+                ),
               ),
               const Divider(),
               Expanded(
