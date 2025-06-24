@@ -14,6 +14,7 @@ class ScreenHomeToday extends StatefulWidget {
 
 class _ScreenHomeTodayState extends State<ScreenHomeToday> {
   
+  //final DateTime today = widget.today; 
   int countFromToday = 0;
   int  month = 0;
   int  day = 0;
@@ -45,7 +46,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
   @override
   Widget build(BuildContext context) {
 
-    DateTime now = DateTime.now();
+    DateTime now = widget.today;
     month = now.month;
     day = now.day;
     weekday = now.weekday;
