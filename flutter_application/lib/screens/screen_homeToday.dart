@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/data/TaskManager.dart';
+//import 'package:flutter_application/data/TaskManager.dart';
 import 'package:flutter_application/data/database.dart';
+
+
 
 
 class ScreenHomeToday extends StatefulWidget {
@@ -20,11 +22,24 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
   int  day = 0;
   int  weekday = 0;
   int count = 0;
+  //DateTime someday = DateTime.now();
+  
+  @override
+  void initState() {
+    super.initState();
+    DateTime now = widget.today;
+    month = now.month;
+    day = now.day;
+    weekday = now.weekday;  
+    
+  }
 
-  //@override
+
+  //@override 
   void _dateTransition() {
     setState(() {
-      DateTime someday;
+      
+      DateTime someday;// = widget.today.add(Duration(days: countFromToday));
       if(countFromToday == 0) {
         someday = widget.today;    
       }else if(countFromToday > 0) {
@@ -38,7 +53,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
       day = someday.day;
       weekday = someday.weekday;
       count = countFromToday;
-      //print('today: ${widget.today}');
+      
     
     });
   }
@@ -46,10 +61,11 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
   @override
   Widget build(BuildContext context) {
 
-    DateTime now = widget.today;
-    month = now.month;
-    day = now.day;
-    weekday = now.weekday;
+    // DateTime now = widget.today;
+    // month = now.month;
+    // day = now.day;
+    // weekday = now.weekday;
+    // build内にあるからbuildされるたびに毎回初期化される
 
     return Scaffold(
       appBar: AppBar(
@@ -75,24 +91,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
         ],
       ),
 
-      // body: Center(
-      //   child: Container(
-      //     width: 350,
-      //     height: 600,
-      //     decoration: BoxDecoration(
-      //       color: Colors.white,
-      //       borderRadius: BorderRadius.circular(10),
-      //       boxShadow: [BoxShadow(color: Colors.black, blurRadius: 1)],
-      //     ),
-      //     child: ListView.builder(
-      //       itemCount: 24,
-      //       itemBuilder: (context, index) => Padding(
-      //         padding: EdgeInsets.all(10),
-      //         child: Text('Item $index'),
-      //       ),
-      //     ),
-      //   ),
-      // ),
+      
       // スクロールウィンドウの表示
       body: Stack(
         clipBehavior: Clip.none,
@@ -139,6 +138,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                   icon: Icon(Icons.arrow_left, size: 70, color: Colors.amberAccent),
                   onPressed: () {
                     countFromToday--;
+
                     _dateTransition();
                   },
                 ),
@@ -153,11 +153,11 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                       crossAxisAlignment: CrossAxisAlignment.center, // 横方向中央揃え
                       children: [
                         Text(
-                          weekdayName[weekday], // 日付データを取得する！
+                          weekdayName[weekday], // 日付データ(曜日)を取得する！
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          '$count',
+                          '$day',   // 日付けを表示
                           style: TextStyle(fontSize: 43, fontWeight: FontWeight.bold),
                         ),
 
@@ -169,6 +169,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                   icon: Icon(Icons.arrow_right, size: 70, color: Colors.amberAccent),
                   onPressed: () {
                     countFromToday++;
+                    //someday = now.add(Duration(days: countFromToday));
                     _dateTransition();
                   },
                 ),
@@ -198,3 +199,32 @@ class HalfMoonClipper extends CustomClipper<Path> {
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
+
+
+
+// class ScreenCalendar extends HookConsumerWidget {
+//   const ScreenCalendar({super.key});
+
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     final selectedDayState = useState(DateTime.now());
+//     final focusedDayState = useState(DateTime.now());
+    
+
+//     void goToPreviousMonth() {
+//       focusedDayState.value = DateTime(
+//         focusedDayState.value.year,
+//         focusedDayState.value.month - 1,
+//       );
+//     }
+
+//     void goToNextMonth() {
+//       focusedDayState.value = DateTime(
+//         focusedDayState.value.year,
+//         focusedDayState.value.month + 1,
+//       );
+//     }
+
+//   return Scaffold(){};
+//   }
+// }
