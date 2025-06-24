@@ -44,6 +44,8 @@ dependencies:
   build_runner: ^2.4.15
   json_serializable: ^6.9.5
   sliding_up_panel: ^2.0.0+1
+  flutter_datetime_picker: ^1.5.1
+  flutter_datetime_picker_plus: ^2.2.0
 
 dev_dependencies:
   flutter_test:
