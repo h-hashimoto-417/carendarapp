@@ -65,7 +65,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
     // month = now.month;
     // day = now.day;
     // weekday = now.weekday;
-    // build内にあるからbuildされるたびに毎回初期化される
+    // build内にあるからbuildされるたびに毎回初期化される。
 
     return Scaffold(
       appBar: AppBar(
