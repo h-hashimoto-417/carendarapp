@@ -16,7 +16,7 @@ class Task {
   final int color;
   final RepeteType repete;
   final String? comment;
-  final DateTime startTime;
+  final List<DateTime>? startTime;
 
   const Task({
     required this.title,
@@ -25,7 +25,17 @@ class Task {
     required this.color,
     this.repete = RepeteType.none,
     this.comment,
-    required this.startTime,
+    this.startTime,
   });
 
+}
+
+class ScheduledTask {
+  final Task task;        // 元のタスク
+  final DateTime dateTime; // このスケジュールの開始日時
+
+  ScheduledTask({
+    required this.task,
+    required this.dateTime,
+  });
 }

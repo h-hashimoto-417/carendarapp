@@ -1,12 +1,12 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'TaskManager.dart';
+part of 'data_manager.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$taskControllerHash() => r'c366f9e874fae2f4fa024c33cc68e3a2c9457911';
+String _$taskControllerHash() => r'9aa4fe904606ad0a8fbb1cd3f82027da56865c13';
 
 /// See also [TaskController].
 @ProviderFor(TaskController)

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/data/TaskManager.dart';
+import 'package:flutter_application/data/data_manager.dart';
 import 'package:flutter_application/data/database.dart';
-
+import 'package:flutter_application/screens/screen_homeToday.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -13,7 +14,7 @@ class ScreenCalendar extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDayState = useState(DateTime.now());
     final focusedDayState = useState(DateTime.now());
-    final selectedTasksState = useState([]);
+    final panelController = useMemoized(() => PanelController());
     final taskProvider = ref.watch(taskControllerProvider);
     final taskColors = [
     Colors.red,
@@ -43,35 +44,176 @@ class ScreenCalendar extends HookConsumerWidget {
       );
     }
 
-    List<Task> getTasksForDay(DateTime day) {
-      final tasks = taskProvider
-          .where((task) => isSameDay(task.startTime, day))
-          .toList();
-      tasks.sort((a, b) => a.startTime.compareTo(b.startTime));
-      return tasks;
+    List<ScheduledTask> getScheduledTasksForDay(DateTime day) {
+      final List<ScheduledTask> scheduledTasks = [];
+
+      for (final task in taskProvider) {
+        final times = task.startTime;
+        if (times == null) continue;
+
+          for (final dt in times) {
+            switch (task.repete) {
+              case RepeteType.none:
+                if (isSameDay(dt, day)) {
+                  scheduledTasks.add(ScheduledTask(task: task, dateTime: dt));
+                }
+              break;
+
+              case RepeteType.daily:
+                // 指定日以降、毎日繰り返す
+                if (dt.isBefore(day) || isSameDay(dt, day)) {
+                  final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
+                  scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
+                }
+                break;
+
+              case RepeteType.weekly:
+                // 指定日以降、毎週同じ曜日に繰り返す
+                if ((dt.isBefore(day) || isSameDay(dt, day)) && dt.weekday == day.weekday) {
+                  final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
+                  scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
+                }
+                break;
+            }
+          }
+      }
+
+      scheduledTasks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+      return scheduledTasks;
+    }
+
+    List<Widget> buildTaskTitles(DateTime date) {
+      final tasks = getScheduledTasksForDay(date);
+      final displayTasks = tasks.take(3).toList();
+
+      if (displayTasks.isEmpty) return [];
+
+      return displayTasks.map((scheduledTask) {
+        final task = scheduledTask.task;
+        final shortTitle = task.title.length > 7
+          ? task.title.substring(0, 7)
+          : task.title;
+        final colorIndex = task.color.clamp(0, 9);
+        return Text(
+          shortTitle,
+          style: TextStyle(
+            fontSize: 10,
+            color: taskColors[colorIndex],
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      }).toList();
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('カレンダー'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        leading: 
+          IconButton(
+            icon: Icon(Icons.calendar_today, color: Colors.black, size: 45),
+            onPressed: () { Navigator.push(
+              context, 
+              MaterialPageRoute(builder: (context) => ScreenHomeToday())
+              ); 
+            },
+          ),
+        
+        title: Text(
+          '${focusedDayState.value.year}',
+          style: TextStyle(color: Colors.black),
+        ),
+        centerTitle: true,
       ),
 
-      body: Column(
-        children: [
+      body: 
+      SlidingUpPanel(
+        controller: panelController,
+        minHeight: 60,
+        maxHeight: MediaQuery.of(context).size.height * 0.4,
+        panelBuilder: (sc) {
+          final tasks = getScheduledTasksForDay(selectedDayState.value);
+          
+          return Column(
+            children: [
+              Container(
+                width: 40,
+                height: 5,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(4)
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Center(
+                      child: 
+                        Text(
+                          '${selectedDayState.value.year}/${selectedDayState.value.month}/${selectedDayState.value.day}の予定',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      child: IconButton(
+                        onPressed: () { 
+                          Navigator.push(
+                            context, 
+                            MaterialPageRoute(builder: (context) => ScreenHomeToday())
+                          );
+                        },
+                        icon: Icon(Icons.visibility, size: 30, color: Colors.black,)),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              Expanded(
+                child: ListView.builder(
+                  controller: sc,
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final scheduledTask = tasks[index];
+                    final task = scheduledTask.task;
+                    final dt = scheduledTask.dateTime;
+                    return ListTile(
+                      title: Text('${dt.hour}:00　${task.title}'),
+                      subtitle: Text(task.comment != null? 'コメント：${task.comment}': 'コメントなし'),
+                      leading: CircleAvatar(
+                        backgroundColor: Color(task.color),
+                      ),
+                    );
+                  },
+                )
+              )
+            ],
+          );
+        },
+      
+      body: 
           TableCalendar<Task>(
-            firstDay: DateTime.utc(1980, 1, 1),
-            lastDay: DateTime.utc(2100, 12, 31),
+            firstDay: DateTime(2000),
+            lastDay: DateTime(2100),
             focusedDay: focusedDayState.value,
+            rowHeight: 80,
             selectedDayPredicate: (day) {
               return isSameDay(selectedDayState.value, day);
             },
             onDaySelected: (selectedDay, focusedDay) {
               selectedDayState.value = selectedDay;
               focusedDayState.value = focusedDay;
-              selectedTasksState.value = getTasksForDay(selectedDay);
+              if (panelController.isPanelClosed) {
+                  panelController.open(); // 日付タップ時にパネル開く
+                }
             },
             eventLoader: (date){
-              return getTasksForDay(date);
+              return taskProvider.where((task) {
+                final times = task.startTime;
+                return times != null && times.any((dt) => isSameDay(dt, date));
+              }).toList();
             },
             locale: 'ja_JP',
             headerStyle: const HeaderStyle(
@@ -83,19 +225,62 @@ class ScreenCalendar extends HookConsumerWidget {
             onPageChanged: (newFocusedDay) {
               focusedDayState.value = newFocusedDay;
             },
+            calendarStyle: const CalendarStyle(
+              outsideDaysVisible: false,
+              tablePadding: EdgeInsets.symmetric(horizontal: 10),
+              cellMargin: EdgeInsets.all(2),
+              cellPadding: EdgeInsets.symmetric(vertical: 4),
+            ),
             calendarBuilders: CalendarBuilders(
-              headerTitleBuilder: (context, day) {
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              selectedBuilder: (context, date, focusedDay) {
+                return Container(
+                  decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blue, width: 2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.topCenter,
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
                   children: [
                     Text(
-                      '${focusedDayState.value.year}',
+                      '${date.day}',
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
+                        color: Colors.blue,
                       ),
                     ),
-                    Row(
+                    ...buildTaskTitles(date), // カスタムタスク表示
+                  ],
+                ),
+              );
+            },
+            todayBuilder: (context, date, focusedDay) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.orange,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.topCenter,
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${date.day}',
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    ...buildTaskTitles(date), // カスタムタスク表示
+                  ],
+                ),
+              );
+            },
+              headerTitleBuilder: (context, day) {
+                return Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
@@ -110,52 +295,48 @@ class ScreenCalendar extends HookConsumerWidget {
                           icon: const Icon(Icons.chevron_right),
                           onPressed: goToNextMonth,
                         ),
-                      ],
+                  ],
+                );
+              },
+              defaultBuilder: (context, date, focusedDay) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${date.day}',
+                      style: const TextStyle(
+
+                        fontWeight: FontWeight.bold,                        
+                        fontSize: 17,
+                      ),
                     ),
+                    ...buildTaskTitles(date),
                   ],
                 );
               },
               markerBuilder: (context, date, events) {
-                if (events.isEmpty) return const SizedBox();
+                // if (events.isEmpty) return const SizedBox();
 
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: events.take(3).map((event) {
-                    final task = event as Task;
-                    final colorIndex = task.color.clamp(0, 9);
-                    return Container(
-                      width: 6,
-                      height: 6,
-                      margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: taskColors[colorIndex],
-                      ),
-                    );
-                  }).toList(),
-                );
+                // return Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: events.take(3).map((event) {
+                //     final task = event;
+                //     final colorIndex = task.color.clamp(0, 9);
+                //     return Container(
+                //       width: 6,
+                //       height: 6,
+                //       margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                //       decoration: BoxDecoration(
+                //         shape: BoxShape.circle,
+                //         color: taskColors[colorIndex],
+                //       ),
+                //     );
+                //   }).toList(),
+                // );
+                return const SizedBox.shrink();
               }
             ),
           ),
-          const Divider(height: 1),
-          Expanded(
-            child: ListView.builder(
-              itemCount: selectedTasksState.value.length,
-              itemBuilder: (context, index) {
-                final task = selectedTasksState.value[index];
-                final timeText =
-                    '${task.startTime.hour.toString().padLeft(2, '0')}:${task.startTime.minute.toString().padLeft(2, '0')}';
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Color(task.color),
-                  ),
-                  title: Text('$timeText  ${task.title}'),
-                  subtitle: Text('必要時間: ${task.requiredHours}h'),
-                );
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
