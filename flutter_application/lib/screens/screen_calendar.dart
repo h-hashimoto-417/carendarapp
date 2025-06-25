@@ -116,7 +116,9 @@ class ScreenCalendar extends HookConsumerWidget {
             icon: Icon(Icons.calendar_today, color: Colors.black, size: 45),
             onPressed: () { Navigator.push(
               context, 
+
               MaterialPageRoute(builder: (context) => ScreenHomeToday(today: DateTime.now()))
+
               ); 
             },
           ),
@@ -165,7 +167,9 @@ class ScreenCalendar extends HookConsumerWidget {
                         onPressed: () { 
                           Navigator.push(
                             context, 
+
                             MaterialPageRoute(builder: (context) => ScreenHomeToday(today :selectedDayState.value))
+
                           );
                         },
                         icon: Icon(Icons.visibility, size: 30, color: Colors.black,)),
