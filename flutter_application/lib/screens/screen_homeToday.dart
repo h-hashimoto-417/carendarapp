@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/screens/screen_calendar.dart';
+//import 'package:flutter_application/screens/screen_calendar.dart';
+import 'package:flutter_application/models/model.dart';
+import 'package:flutter_application/data/data_manager.dart';
 //import 'package:flutter_application/data/TaskManager.dart';
 import 'package:flutter_application/data/database.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class ScreenHomeToday extends StatefulWidget {
+class ScreenHomeToday extends ConsumerStatefulWidget {
   const ScreenHomeToday({super.key, required this.today});
   final DateTime today;
 
   @override
-  State<ScreenHomeToday> createState() => _ScreenHomeTodayState();
+  ConsumerState<ScreenHomeToday> createState() => _ScreenHomeTodayState();
 }
 
-class _ScreenHomeTodayState extends State<ScreenHomeToday> {
+class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   //final DateTime today = widget.today;
   int countFromToday = 0;
   int month = 0;
@@ -19,14 +22,30 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
   int weekday = 0;
   int count = 0;
   DateTime someday = DateTime.now();
+  List<Color> timeColors = List.generate( 24, (index) => Colors.white);
+  List<String> taskTitles = List.generate( 24, (index) => '');
+  final taskColors = [
+    Colors.red,
+    Colors.blue,
+    Colors.yellow,
+    Colors.green,
+    Colors.pink,
+    Colors.cyan,
+    Colors.orange,
+    Colors.purple,
+    Colors.lightGreen,
+    Colors.black,
+    ];
+  //final taskProvider = ref.watch(taskControllerProvider);
 
   @override
   void initState() {
     super.initState();
-    DateTime now = widget.today;
-    month = now.month;
-    day = now.day;
-    weekday = now.weekday;
+    someday = widget.today;
+    month = someday.month;
+    day = someday.day;
+    weekday = someday.weekday;
+    
   }
 
   //@override
@@ -45,17 +64,11 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
       day = someday.day;
       weekday = someday.weekday;
       count = countFromToday;
+      
     });
   }
 
-  void _taskblock() {
-    ScreenCalendar screencalendar = ScreenCalendar();
-    // somedayにおけるtaskデータを取得（タスク, 開始時間）
-    List<ScheduledTask> tasks = screencalendar.getScheduledTasksForDay(someday);
-    // Listを参照してcontainerblockの色をtaskの色に設定
-
-    // 
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +77,26 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
     // day = now.day;
     // weekday = now.weekday;
     // build内にあるからbuildされるたびに毎回初期化される。
+
+    final taskProvider = ref.watch(taskControllerProvider);
+
+    void taskblock() {
+    
+    // somedayにおけるtaskデータを取得（タスク, 開始時間）
+    List<ScheduledTask> tasks = getScheduledTasksForDay(someday, taskProvider);
+    // Listを参照してcontainerblockの色をtaskの色に設定
+    timeColors.fillRange(0, timeColors.length, Colors.white); 
+    taskTitles.fillRange(0, taskTitles.length, ''); 
+    for (int i=0; i < tasks.length; i++) {
+      timeColors[tasks[i].dateTime.hour] = taskColors[tasks[i].task.color];
+      taskTitles[tasks[i].dateTime.hour] = tasks[i].task.title;
+    }
+    
+    }
+
+    taskblock();
+
+
 
     return Scaffold(
       appBar: AppBar(
@@ -111,8 +144,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                     ),
                     child: SingleChildScrollView(
                       child: Column(
-                        children: List.generate(
-                          24,
+                        children: List.generate( 24,
                           (index) => Container(
                             padding: EdgeInsets.all(10),
                             child: Column(
@@ -128,13 +160,13 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                                   width: double.infinity, // 横幅いっぱい
                                   height: 60, // 高さ100の長方形
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: timeColors[index],
                                     borderRadius: BorderRadius.circular(7),
                                   ),
-                                  // child: Text(
-                                  //   '$', // 日付データを取得する！
-                                  //   style: TextStyle(color: Colors.black),
-                                  // ),
+                                  child: Text(
+                                    taskTitles[index], // 日付データを取得する！
+                                    style: TextStyle(fontSize: 13, color: Colors.black),
+                                  ),
                                   //color: Colors.blue, // 色を指定
                                 ),
                               ],
@@ -172,6 +204,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                   onPressed: () {
                     countFromToday--;
                     _dateTransition();
+                    //taskblock();
                   },
                 ),
                 ClipPath(
@@ -212,6 +245,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                     countFromToday++;
                     //someday = now.add(Duration(days: countFromToday));
                     _dateTransition();
+                    //taskblock();
                   },
                 ),
               ],
