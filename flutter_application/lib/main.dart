@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/screens/screen_addtask.dart';
 import 'package:flutter_application/screens/screen_calendar.dart';
+// import 'package:flutter_application/screens/screen_calendar.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
       ),
       debugShowCheckedModeBanner: false,
-      home: ScreenAddTask(),
+      home: ScreenCalendar(),
       );
   }
 }
