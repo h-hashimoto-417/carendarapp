@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 //import 'package:flutter_application/screens/screen_calendar.dart';
 import 'package:flutter_application/models/model.dart';
 import 'package:flutter_application/data/data_manager.dart';
+import 'package:flutter_application/screens/screen_addtask.dart';
 //import 'package:flutter_application/data/TaskManager.dart';
 import 'package:flutter_application/data/database.dart';
+import 'package:flutter_application/screens/screen_calendar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class ScreenHomeToday extends ConsumerStatefulWidget {
@@ -113,7 +115,11 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
           onPressed:
               () => {
                 // カレンダーアイコンの動作を定義
-                Navigator.pushNamed(context, "/carendarPage"),
+                Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context) => ScreenCalendar())
+              )
+                
               },
         ),
         title: Text(
@@ -126,6 +132,10 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
             icon: const Icon(Icons.edit_note, size: 45), // 右端のアイコン
             onPressed: () {
               // 編集アイコンの動作を定義
+              Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context) => ScreenAddTask())
+              );
             },
           ),
         ],
