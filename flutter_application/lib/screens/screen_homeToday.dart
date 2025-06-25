@@ -23,17 +23,19 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   int count = 0;
   DateTime someday = DateTime.now();
   List<Color> timeColors = List.generate( 24, (index) => Colors.white);
+  List<Color> textColors = List.generate( 24, (index) => Colors.white);
   List<String> taskTitles = List.generate( 24, (index) => '');
-  final taskColors = [
+  List<String> taskComments = List.generate( 24, (index) => '');
+  final taskColors = [    
+    Colors.yellow,
+    Colors.lightGreen,
     Colors.red,
     Colors.blue,
-    Colors.yellow,
     Colors.green,
     Colors.pink,
     Colors.cyan,
     Colors.orange,
-    Colors.purple,
-    Colors.lightGreen,
+    Colors.purple,    
     Colors.black,
     ];
   //final taskProvider = ref.watch(taskControllerProvider);
@@ -86,10 +88,15 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     List<ScheduledTask> tasks = getScheduledTasksForDay(someday, taskProvider);
     // Listを参照してcontainerblockの色をtaskの色に設定
     timeColors.fillRange(0, timeColors.length, Colors.white); 
+    textColors.fillRange(0, timeColors.length, Colors.white);
     taskTitles.fillRange(0, taskTitles.length, ''); 
     for (int i=0; i < tasks.length; i++) {
-      timeColors[tasks[i].dateTime.hour] = taskColors[tasks[i].task.color];
+      timeColors[tasks[i].dateTime.hour] = taskColors[tasks[i].task.color];      
       taskTitles[tasks[i].dateTime.hour] = tasks[i].task.title;
+      //taskComments[tasks[i].dateTime.hour] = (tasks[i].task.comment ?? "").isEmpty ? '' : tasks[i].task.comment;
+      if(tasks[i].task.color == 0 || tasks[i].task.color == 1) {
+        textColors[tasks[i].dateTime.hour] = Colors.black;
+      }
     }
     
     }
@@ -165,7 +172,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                   ),
                                   child: Text(
                                     taskTitles[index], // 日付データを取得する！
-                                    style: TextStyle(fontSize: 13, color: Colors.black),
+                                    style: TextStyle(fontSize: 15, color: textColors[index]),
+                                    textAlign: TextAlign.center,
                                   ),
                                   //color: Colors.blue, // 色を指定
                                 ),
