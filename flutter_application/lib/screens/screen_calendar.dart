@@ -5,12 +5,15 @@ import 'package:flutter_application/screens/screen_homeToday.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart'; 
+import 'package:flutter_application/models/schedule_utils.dart';
+
 
 class ScreenCalendar extends HookConsumerWidget {
   const ScreenCalendar({super.key});
 
   @override
+
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDayState = useState(DateTime.now());
     final focusedDayState = useState(DateTime.now());
@@ -44,46 +47,46 @@ class ScreenCalendar extends HookConsumerWidget {
       );
     }
 
-    List<ScheduledTask> getScheduledTasksForDay(DateTime day) {
-      final List<ScheduledTask> scheduledTasks = [];
+    // List<ScheduledTask> getScheduledTasksForDay(DateTime day) {
+    //   final List<ScheduledTask> scheduledTasks = [];
 
-      for (final task in taskProvider) {
-        final times = task.startTime;
-        if (times == null) continue;
+    //   for (final task in taskProvider) {
+    //     final times = task.startTime;
+    //     if (times == null) continue;
 
-          for (final dt in times) {
-            switch (task.repete) {
-              case RepeteType.none:
-                if (isSameDay(dt, day)) {
-                  scheduledTasks.add(ScheduledTask(task: task, dateTime: dt));
-                }
-              break;
+    //       for (final dt in times) {
+    //         switch (task.repete) {
+    //           case RepeteType.none:
+    //             if (isSameDay(dt, day)) {
+    //               scheduledTasks.add(ScheduledTask(task: task, dateTime: dt));
+    //             }
+    //           break;
 
-              case RepeteType.daily:
-                // 指定日以降、毎日繰り返す
-                if (dt.isBefore(day) || isSameDay(dt, day)) {
-                  final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
-                  scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
-                }
-                break;
+    //           case RepeteType.daily:
+    //             // 指定日以降、毎日繰り返す
+    //             if (dt.isBefore(day) || isSameDay(dt, day)) {
+    //               final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
+    //               scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
+    //             }
+    //             break;
 
-              case RepeteType.weekly:
-                // 指定日以降、毎週同じ曜日に繰り返す
-                if ((dt.isBefore(day) || isSameDay(dt, day)) && dt.weekday == day.weekday) {
-                  final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
-                  scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
-                }
-                break;
-            }
-          }
-      }
+    //           case RepeteType.weekly:
+    //             // 指定日以降、毎週同じ曜日に繰り返す
+    //             if ((dt.isBefore(day) || isSameDay(dt, day)) && dt.weekday == day.weekday) {
+    //               final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
+    //               scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
+    //             }
+    //             break;
+    //         }
+    //       }
+    //   }
 
-      scheduledTasks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
-      return scheduledTasks;
-    }
+    //   scheduledTasks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+    //   return scheduledTasks;
+    // }
 
     List<Widget> buildTaskTitles(DateTime date) {
-      final tasks = getScheduledTasksForDay(date);
+      final tasks = getScheduledTasksForDay(date, taskProvider);
       final displayTasks = tasks.take(3).toList();
 
       if (displayTasks.isEmpty) return [];
@@ -113,7 +116,9 @@ class ScreenCalendar extends HookConsumerWidget {
             icon: Icon(Icons.calendar_today, color: Colors.black, size: 45),
             onPressed: () { Navigator.push(
               context, 
-              MaterialPageRoute(builder: (context) => ScreenHomeToday(today:DateTime.now()))
+
+              MaterialPageRoute(builder: (context) => ScreenHomeToday(today: DateTime.now()))
+
               ); 
             },
           ),
@@ -131,7 +136,7 @@ class ScreenCalendar extends HookConsumerWidget {
         minHeight: 60,
         maxHeight: MediaQuery.of(context).size.height * 0.4,
         panelBuilder: (sc) {
-          final tasks = getScheduledTasksForDay(selectedDayState.value);
+          final tasks = getScheduledTasksForDay(selectedDayState.value, taskProvider);
           
           return Column(
             children: [
@@ -162,7 +167,9 @@ class ScreenCalendar extends HookConsumerWidget {
                         onPressed: () { 
                           Navigator.push(
                             context, 
-                            MaterialPageRoute(builder: (context) => ScreenHomeToday(today:DateTime.now()))
+
+                            MaterialPageRoute(builder: (context) => ScreenHomeToday(today :selectedDayState.value))
+
                           );
                         },
                         icon: Icon(Icons.visibility, size: 30, color: Colors.black,)),
@@ -181,7 +188,7 @@ class ScreenCalendar extends HookConsumerWidget {
                     final dt = scheduledTask.dateTime;
                     return ListTile(
                       title: Text('${dt.hour}:00　${task.title}'),
-                      subtitle: Text(task.comment != null? 'コメント：${task.comment}': 'コメントなし'),
+                      subtitle: Text(task.comment != null? '${task.comment}': 'コメントなし'),
                       leading: CircleAvatar(
                         backgroundColor: Color(task.color),
                       ),

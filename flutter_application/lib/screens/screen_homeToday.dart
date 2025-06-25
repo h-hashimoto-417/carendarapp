@@ -93,7 +93,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     for (int i=0; i < tasks.length; i++) {
       timeColors[tasks[i].dateTime.hour] = taskColors[tasks[i].task.color];      
       taskTitles[tasks[i].dateTime.hour] = tasks[i].task.title;
-      //taskComments[tasks[i].dateTime.hour] = (tasks[i].task.comment ?? "").isEmpty ? '' : tasks[i].task.comment;
+      //taskComments[tasks[i].dateTime.hour] = (tasks[i].task.comment == null) ? '' : tasks[i].task.comment;
       if(tasks[i].task.color == 0 || tasks[i].task.color == 1) {
         textColors[tasks[i].dateTime.hour] = Colors.black;
       }
