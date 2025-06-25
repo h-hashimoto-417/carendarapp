@@ -3,6 +3,8 @@ import 'package:flutter_application/data/database.dart';
 import 'package:flutter_application/data/data_manager.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
+import 'package:flutter_application/screens/screen_homeToday.dart';
+
 
 class ScreenAddTask extends ConsumerStatefulWidget {
   const ScreenAddTask({super.key});
@@ -20,6 +22,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
   DateTime? limit;
 
   void _saveTask() {
+  try {
     final title = titleController.text;
     final hours = int.tryParse(hoursController.text) ?? 1;
 
@@ -30,14 +33,28 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
       requiredHours: hours,
       color: selectedColor,
       repete: selectedRepeat,
-      comment: commentController.text.isEmpty ? commentController.text : null,
+      comment: commentController.text.isEmpty ? null : commentController.text,
       limit: limit,
       startTime: null,
     );
 
     ref.read(taskControllerProvider.notifier).addTask(newTask);
-    Navigator.pop(context);
+
+    // ScreenHomeTodayに遷移（todayに現在時刻を渡す）
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ScreenHomeToday(today: DateTime.now()),
+      ),
+    );
+  } catch (e, stack) {
+    print('タスク保存エラー: $e\n$stack');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('エラーが発生しました: $e')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -65,12 +82,12 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
               decoration: const InputDecoration(labelText: 'Title'),
             ),
             TextField(
-              controller: titleController,
+              controller: hoursController,
               decoration: const InputDecoration(labelText: 'Required Hours'),
               keyboardType: TextInputType.number,
             ),
             TextField(
-              controller: titleController,
+              controller: commentController,
               decoration: const InputDecoration(labelText: 'Comment'),
             ),
 
@@ -115,8 +132,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             ElevatedButton(
               onPressed: () {
                 DatePicker.showDatePicker(
-                  context,
-                  showTitleActions: true,
+                  context,                  showTitleActions: true,
                   minTime: DateTime(2020, 1, 1),
                   maxTime: DateTime(2100, 12, 31),
                   currentTime: limit ?? DateTime.now(),
