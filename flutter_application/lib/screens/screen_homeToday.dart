@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 //import 'package:flutter_application/data/TaskManager.dart';
 import 'package:flutter_application/data/database.dart';
+import 'package:flutter_application/screens/screen_addtask.dart';
 import 'package:flutter_application/screens/screen_calendar.dart';
 
 
@@ -88,6 +89,10 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
            IconButton(
              icon: const Icon(Icons.edit_note, size: 45), // 右端のアイコン
              onPressed: () {
+              Navigator.push(
+                context, 
+                MaterialPageRoute(builder: (context) => ScreenAddTask())
+              );
               // 編集アイコンの動作を定義
              },
             ),
@@ -115,12 +120,25 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                     ),
                     child: SingleChildScrollView(
                       child: Column(
-                        children: List.generate(25, (index) => Padding(
+                        children: List.generate(25, (index) => 
+                        Container(
+                          
+                          height: 85,
                           padding: EdgeInsets.all(25),
                           child: Align( 
                             alignment: Alignment.topLeft,
                             child: Text('$index : 00',),
-                        ))),
+                          ),
+                          
+                        )
+                        
+                        // Padding(
+                        //   padding: EdgeInsets.all(25),
+                        //   child: Align( 
+                        //     alignment: Alignment.topLeft,
+                        //     child: Text('$index : 00',),
+                        // ))
+                        ),
                       ),
                     ),
                   ),
