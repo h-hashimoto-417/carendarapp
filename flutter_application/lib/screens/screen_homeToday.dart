@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/screens/screen_calendar.dart';
 //import 'package:flutter_application/data/TaskManager.dart';
 import 'package:flutter_application/data/database.dart';
 
@@ -17,7 +18,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
   int day = 0;
   int weekday = 0;
   int count = 0;
-  //DateTime someday = DateTime.now();
+  DateTime someday = DateTime.now();
 
   @override
   void initState() {
@@ -31,7 +32,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
   //@override
   void _dateTransition() {
     setState(() {
-      DateTime someday; // = widget.today.add(Duration(days: countFromToday));
+      //DateTime someday; // = widget.today.add(Duration(days: countFromToday));
       if (countFromToday == 0) {
         someday = widget.today;
       } else if (countFromToday > 0) {
@@ -45,6 +46,15 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
       weekday = someday.weekday;
       count = countFromToday;
     });
+  }
+
+  void _taskblock() {
+    ScreenCalendar screencalendar = ScreenCalendar();
+    // somedayにおけるtaskデータを取得（タスク, 開始時間）
+    List<ScheduledTask> tasks = screencalendar.getScheduledTasksForDay(someday);
+    // Listを参照してcontainerblockの色をtaskの色に設定
+
+    // 
   }
 
   @override
@@ -111,7 +121,7 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                               children: [
                                 Text(
                                   '$index : 00',
-                                  style: TextStyle(fontSize: 18),
+                                  style: TextStyle(fontSize: 13),
                                 ),
                                 SizedBox(height: 6), // テキストと長方形の間にスペース
                                 Container(
@@ -119,8 +129,12 @@ class _ScreenHomeTodayState extends State<ScreenHomeToday> {
                                   height: 60, // 高さ100の長方形
                                   decoration: BoxDecoration(
                                     color: Colors.white,
-                                    borderRadius: BorderRadius.circular(7),                                    
+                                    borderRadius: BorderRadius.circular(7),
                                   ),
+                                  // child: Text(
+                                  //   '$', // 日付データを取得する！
+                                  //   style: TextStyle(color: Colors.black),
+                                  // ),
                                   //color: Colors.blue, // 色を指定
                                 ),
                               ],
