@@ -5,12 +5,13 @@ import 'package:flutter_application/screens/screen_homeToday.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart'; 
 
 class ScreenCalendar extends HookConsumerWidget {
   const ScreenCalendar({super.key});
 
   @override
+
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedDayState = useState(DateTime.now());
     final focusedDayState = useState(DateTime.now());
@@ -113,7 +114,7 @@ class ScreenCalendar extends HookConsumerWidget {
             icon: Icon(Icons.calendar_today, color: Colors.black, size: 45),
             onPressed: () { Navigator.push(
               context, 
-              MaterialPageRoute(builder: (context) => ScreenHomeToday())
+              MaterialPageRoute(builder: (context) => ScreenHomeToday(today: DateTime.now()))
               ); 
             },
           ),
@@ -162,7 +163,7 @@ class ScreenCalendar extends HookConsumerWidget {
                         onPressed: () { 
                           Navigator.push(
                             context, 
-                            MaterialPageRoute(builder: (context) => ScreenHomeToday())
+                            MaterialPageRoute(builder: (context) => ScreenHomeToday(today :selectedDayState.value))
                           );
                         },
                         icon: Icon(Icons.visibility, size: 30, color: Colors.black,)),
