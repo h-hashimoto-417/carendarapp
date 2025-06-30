@@ -7,6 +7,7 @@ import 'package:flutter_application/screens/screen_addtask.dart';
 import 'package:flutter_application/data/database.dart';
 import 'package:flutter_application/screens/screen_calendar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class ScreenHomeToday extends ConsumerStatefulWidget {
   const ScreenHomeToday({super.key, required this.today});
@@ -18,6 +19,8 @@ class ScreenHomeToday extends ConsumerStatefulWidget {
 
 class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   //final DateTime today = widget.today;
+  final PanelController _panelController = PanelController();
+  bool isEdditing = false;
   int countFromToday = 0;
   int month = 0;
   int day = 0;
@@ -126,167 +129,208 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
             icon: const Icon(Icons.edit_note, size: 45), // 右端のアイコン
             onPressed: () {
               // 編集アイコンの動作を定義
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ScreenAddTask()),
-              );
+              setState(() {isEdditing = true;});
+              _panelController.open(); // パネルを開く
+
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => ScreenAddTask()),
+              // );
             },
           ),
         ],
       ),
 
-      // スクロールウィンドウの表示
-      body: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Column(
-            children: [
-              SizedBox(height: 0), // 半円をかぶせる余白を確保
-              Expanded(
-                child: Center(
-                  child: Container(
-                    width: 350,
-                    height: 690,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: Colors.black, width: 1),
-                      //boxShadow: [BoxShadow(color: Colors.black, blurRadius: 1)],
-                    ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: List.generate(
-                          24,
-                          (index) => Container(
-                            padding: EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start, // 左寄せ
-                              children: [
-                                Text(
-                                  '$index : 00',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.blueGrey,
-                                  ),
-                                ),
-                                SizedBox(height: 6), // テキストと長方形の間にスペース
-                                Container(
-                                  width: double.infinity, // 横幅いっぱい
-                                  height: 60, // 高さ60の長方形
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: timeColors[index], // ボックスの色
-                                    borderRadius: BorderRadius.circular(7),
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    //crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        taskTitles[index], // task名を表示！
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: textColors[index],
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        //textAlign: TextAlign.center,
-                                      ),
-                                      Text(
-                                        taskComments[index], // comment(副題)を表示！
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: textColors[index],
-                                        ),
-                                        //textAlign: TextAlign.center,
-                                      ),
-                                    ]
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+      // ボトムシートの表示
+      body: SlidingUpPanel(
+        controller: _panelController,
+        minHeight: isEdditing ? 60 : 0,
+        maxHeight: 300,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        panel: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [              
+              //Spacer(),
+              IconButton(
+                icon: Icon(Icons.save, size: 32),
+                onPressed: () {                  
+                  _panelController.close(); // パネルを閉じる
+                  setState(() {isEdditing = false;});
+                },
+              ),
+              Text(
+                '編集中',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: Icon(Icons.add_box, size: 32),
+                onPressed: () {                  
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ScreenAddTask()),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
 
-                          //   padding: EdgeInsets.all(25),
-                          //   child: Align(
-                          //     alignment: Alignment.topLeft,
-                          //     child: Text('$index : 00',),
-                          // ))
+        // スクロールウィンドウの表示
+        body: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Column(
+              children: [
+                SizedBox(height: 0), // 半円をかぶせる余白を確保
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      width: 350,
+                      height: 690,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: Colors.black, width: 1),
+                        //boxShadow: [BoxShadow(color: Colors.black, blurRadius: 1)],
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            ...List.generate(
+                              24,
+                              (index) => Container(
+                                padding: EdgeInsets.all(10),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start, // 左寄せ
+                                  children: [
+                                    Text(
+                                      '$index : 00',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.blueGrey,
+                                      ),
+                                    ),
+                                    SizedBox(height: 6), // テキストと長方形の間にスペース
+                                    Container(
+                                      width: double.infinity, // 横幅いっぱい
+                                      height: 60, // 高さ60の長方形
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: timeColors[index], // ボックスの色
+                                        borderRadius: BorderRadius.circular(7),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        //crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            taskTitles[index], // task名を表示！
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              color: textColors[index],
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            //textAlign: TextAlign.center,
+                                          ),
+                                          Text(
+                                            taskComments[index], // comment(副題)を表示！
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: textColors[index],
+                                            ),
+                                            //textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              height: 280, // 好きな高さに
+                              color: Colors.transparent, // あるいは Colors.white
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-
-          // 半円をスクロールウィンドウにかぶせる
-          Positioned(
-            top: 0, // スクロールウィンドウにしっかりかぶるように調整
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.arrow_left,
-                    size: 70,
-                    color: Colors.amberAccent,
-                  ),
-                  onPressed: () {
-                    countFromToday--;
-                    _dateTransition();
-                    //taskblock();
-                  },
-                ),
-                ClipPath(
-                  clipper: HalfMoonClipper(), // 修正したクリッパーを適用
-                  child: Container(
-                    width: 200, // 少し大きめに調整
-                    height: 100, // 高さを調整
-                    color: const Color.fromARGB(255, 243, 194, 33),
-                    child: Column(
-                      //mainAxisAlignment: MainAxisAlignment.spaceBetween, // 上下に配置
-                      crossAxisAlignment: CrossAxisAlignment.center, // 横方向中央揃え
-                      children: [
-                        Text(
-                          weekdayName[weekday], // 日付データ(曜日)を取得する！
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '$day', // 日付けを表示
-                          style: TextStyle(
-                            fontSize: 43,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.arrow_right,
-                    size: 70,
-                    color: Colors.amberAccent,
-                  ),
-                  onPressed: () {
-                    countFromToday++;
-                    //someday = now.add(Duration(days: countFromToday));
-                    _dateTransition();
-                    //taskblock();
-                  },
-                ),
               ],
             ),
-          ),
-        ],
+
+            // 半円をスクロールウィンドウにかぶせる
+            Positioned(
+              top: 0, // スクロールウィンドウにしっかりかぶるように調整
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_left,
+                      size: 70,
+                      color: Colors.amberAccent,
+                    ),
+                    onPressed: () {
+                      countFromToday--;
+                      _dateTransition();
+                      //taskblock();
+                    },
+                  ),
+                  ClipPath(
+                    clipper: HalfMoonClipper(), // 修正したクリッパーを適用
+                    child: Container(
+                      width: 200, // 少し大きめに調整
+                      height: 100, // 高さを調整
+                      color: const Color.fromARGB(255, 243, 194, 33),
+                      child: Column(
+                        //mainAxisAlignment: MainAxisAlignment.spaceBetween, // 上下に配置
+                        crossAxisAlignment:
+                            CrossAxisAlignment.center, // 横方向中央揃え
+                        children: [
+                          Text(
+                            weekdayName[weekday], // 日付データ(曜日)を取得する！
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '$day', // 日付けを表示
+                            style: TextStyle(
+                              fontSize: 43,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.arrow_right,
+                      size: 70,
+                      color: Colors.amberAccent,
+                    ),
+                    onPressed: () {
+                      countFromToday++;
+                      //someday = now.add(Duration(days: countFromToday));
+                      _dateTransition();
+                      //taskblock();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
