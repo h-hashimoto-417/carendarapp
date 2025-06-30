@@ -24,11 +24,11 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   int weekday = 0;
   int count = 0;
   DateTime someday = DateTime.now();
-  List<Color> timeColors = List.generate( 24, (index) => Colors.white);
-  List<Color> textColors = List.generate( 24, (index) => Colors.white);
-  List<String> taskTitles = List.generate( 24, (index) => '');
-  List<String> taskComments = List.generate( 24, (index) => '');
-  final taskColors = [    
+  List<Color> timeColors = List.generate(24, (index) => Colors.white);
+  List<Color> textColors = List.generate(24, (index) => Colors.white);
+  List<String> taskTitles = List.generate(24, (index) => '');
+  List<String> taskComments = List.generate(24, (index) => '');
+  final taskColors = [
     Colors.yellow,
     Colors.lightGreen,
     Colors.red,
@@ -37,9 +37,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     Colors.pink,
     Colors.cyan,
     Colors.orange,
-    Colors.purple,    
+    Colors.purple,
     Colors.black,
-    ];
+  ];
   //final taskProvider = ref.watch(taskControllerProvider);
 
   @override
@@ -49,7 +49,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     month = someday.month;
     day = someday.day;
     weekday = someday.weekday;
-    
   }
 
   //@override
@@ -68,11 +67,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
       day = someday.day;
       weekday = someday.weekday;
       count = countFromToday;
-      
     });
   }
-
-  
 
   @override
   Widget build(BuildContext context) {
@@ -85,27 +81,26 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     final taskProvider = ref.watch(taskControllerProvider);
 
     void taskblock() {
-    
-    // somedayにおけるtaskデータを取得（タスク, 開始時間）
-    List<ScheduledTask> tasks = getScheduledTasksForDay(someday, taskProvider);
-    // Listを参照してcontainerblockの色をtaskの色に設定
-    timeColors.fillRange(0, timeColors.length, Colors.white); 
-    textColors.fillRange(0, timeColors.length, Colors.white);
-    taskTitles.fillRange(0, taskTitles.length, ''); 
-    for (int i=0; i < tasks.length; i++) {
-      timeColors[tasks[i].dateTime.hour] = taskColors[tasks[i].task.color];      
-      taskTitles[tasks[i].dateTime.hour] = tasks[i].task.title;
-      //taskComments[tasks[i].dateTime.hour] = (tasks[i].task.comment == null) ? '' : tasks[i].task.comment;
-      if(tasks[i].task.color == 0 || tasks[i].task.color == 1) {
-        textColors[tasks[i].dateTime.hour] = Colors.black;
+      // somedayにおけるtaskデータを取得（タスク, 開始時間）
+      List<ScheduledTask> tasks = getScheduledTasksForDay(
+        someday,
+        taskProvider,
+      );
+      // Listを参照してcontainerblockの色をtaskの色に設定
+      timeColors.fillRange(0, timeColors.length, Colors.white);
+      textColors.fillRange(0, timeColors.length, Colors.white);
+      taskTitles.fillRange(0, taskTitles.length, '');
+      for (int i = 0; i < tasks.length; i++) {
+        timeColors[tasks[i].dateTime.hour] = taskColors[tasks[i].task.color];
+        taskTitles[tasks[i].dateTime.hour] = tasks[i].task.title;
+        taskComments[tasks[i].dateTime.hour] = tasks[i].task.comment ?? '';
+        if (tasks[i].task.color == 0 || tasks[i].task.color == 1) {
+          textColors[tasks[i].dateTime.hour] = Colors.black;
+        }
       }
-    }
-    
     }
 
     taskblock();
-
-
 
     return Scaffold(
       appBar: AppBar(
@@ -116,10 +111,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
               () => {
                 // カレンダーアイコンの動作を定義
                 Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (context) => ScreenCalendar())
-              )
-                
+                  context,
+                  MaterialPageRoute(builder: (context) => ScreenCalendar()),
+                ),
               },
         ),
         title: Text(
@@ -133,8 +127,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
             onPressed: () {
               // 編集アイコンの動作を定義
               Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (context) => ScreenAddTask())
+                context,
+                MaterialPageRoute(builder: (context) => ScreenAddTask()),
               );
             },
           ),
@@ -161,7 +155,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     ),
                     child: SingleChildScrollView(
                       child: Column(
-                        children: List.generate( 24,
+                        children: List.generate(
+                          24,
                           (index) => Container(
                             padding: EdgeInsets.all(10),
                             child: Column(
@@ -170,22 +165,44 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                               children: [
                                 Text(
                                   '$index : 00',
-                                  style: TextStyle(fontSize: 13),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.blueGrey,
+                                  ),
                                 ),
                                 SizedBox(height: 6), // テキストと長方形の間にスペース
                                 Container(
                                   width: double.infinity, // 横幅いっぱい
-                                  height: 60, // 高さ100の長方形
+                                  height: 60, // 高さ60の長方形
+                                  alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: timeColors[index],
+                                    color: timeColors[index], // ボックスの色
                                     borderRadius: BorderRadius.circular(7),
                                   ),
-                                  child: Text(
-                                    taskTitles[index], // 日付データを取得する！
-                                    style: TextStyle(fontSize: 15, color: textColors[index]),
-                                    textAlign: TextAlign.center,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    //crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        taskTitles[index], // task名を表示！
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: textColors[index],
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        //textAlign: TextAlign.center,
+                                      ),
+                                      Text(
+                                        taskComments[index], // comment(副題)を表示！
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: textColors[index],
+                                        ),
+                                        //textAlign: TextAlign.center,
+                                      ),
+                                    ]
                                   ),
-                                  //color: Colors.blue, // 色を指定
                                 ),
                               ],
                             ),
