@@ -129,12 +129,12 @@ class ScreenCalendar extends HookConsumerWidget {
         ),
         centerTitle: true,
       ),
-
+      
       body: 
       SlidingUpPanel(
         controller: panelController,
         minHeight: 60,
-        maxHeight: MediaQuery.of(context).size.height * 0.4,
+        maxHeight: MediaQuery.of(context).size.height * 0.35,
         panelBuilder: (sc) {
           final tasks = getScheduledTasksForDay(selectedDayState.value, taskProvider);
           
