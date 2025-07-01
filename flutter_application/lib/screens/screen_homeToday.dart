@@ -112,11 +112,13 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
           icon: const Icon(Icons.calendar_month, size: 45), // 左端のアイコン
           onPressed:
               () => {
+
                 // カレンダーアイコンの動作を定義
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ScreenCalendar()),
                 ),
+
               },
         ),
         title: Text(
@@ -127,6 +129,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_note, size: 45), // 右端のアイコン
+
             onPressed: () {
               // 編集アイコンの動作を定義
               setState(() {isEdditing = true;});
@@ -136,6 +139,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
               //   context,
               //   MaterialPageRoute(builder: (context) => ScreenAddTask()),
               // );
+
             },
           ),
         ],

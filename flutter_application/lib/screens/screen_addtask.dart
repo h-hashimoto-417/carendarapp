@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application/data/database.dart';
 import 'package:flutter_application/data/data_manager.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -95,15 +96,27 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             TextField(
               controller: titleController,
               decoration: const InputDecoration(labelText: 'Title'),
+              maxLength: 15,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(15)
+              ],
             ),
             TextField(
               controller: hoursController,
               decoration: const InputDecoration(labelText: 'Required Hours'),
               keyboardType: TextInputType.number,
+              maxLength: 3,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(3)
+              ],
             ),
             TextField(
               controller: commentController,
               decoration: const InputDecoration(labelText: 'Comment'),
+              maxLength: 30,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(30)
+              ],
             ),
 
             const SizedBox(height: 10),
