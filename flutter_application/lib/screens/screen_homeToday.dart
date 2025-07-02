@@ -72,6 +72,11 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
 
     final taskProvider = ref.watch(taskControllerProvider);
     final List<Task> notPlacedTasks = getNotPlacedTask(taskProvider);
+    int notPlacedTasksLength = 0;
+
+    if (notPlacedTasks != []) {
+      notPlacedTasksLength = notPlacedTasks.length;
+    }
 
     void taskblock() {
       // somedayにおけるtaskデータを取得（タスク, 開始時間）
@@ -213,29 +218,72 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
             Expanded(
               child: Container(
                 color: Colors.white, // パネル全体の背景色
-                child: SingleChildScrollView(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    children: List.generate(notPlacedTasks.length, (index) {
-                      return Padding(
-                        padding: EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: taskColors[notPlacedTasks[index].color],
-                            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                            maximumSize: Size(80, 60), // 幅150, 高さ60
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular( 12, ), // ← ここで角丸を指定
+                // child: GridView.count(
+                //   crossAxisCount: 2,
+                //     padding: EdgeInsets.all(8),
+                //     crossAxisSpacing: 8,
+                //     mainAxisSpacing: 3,
+                //   // shrinkWrap: true,
+                //   //physics: NeverScrollableScrollPhysics(),
+                //   children: List.generate(notPlacedTasksLength, (index) {
+                //     return Padding(
+                //       padding: EdgeInsets.all(8),
+                //       child: ElevatedButton(
+                //         onPressed: () {},
+                //         style: ElevatedButton.styleFrom(
+                //           backgroundColor:
+                //               taskColors[notPlacedTasks[index].color],
+                //           padding: EdgeInsets.all(8),
+                //           fixedSize: Size.fromHeight(10), // 幅150, 高さ60
+                //           shape: RoundedRectangleBorder(
+                //             borderRadius: BorderRadius.circular(
+                //               12,
+                //             ), // ← ここで角丸を指定
+                //           ),
+                //         ),
+                //         child: Text(notPlacedTasks[index].title),
+                //       ),
+                //     );
+                //   }),
+                // ),
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  childAspectRatio: 2.3,
+                  padding: EdgeInsets.all(8), crossAxisSpacing: 3, mainAxisSpacing: 3,
+                  children: List.generate(notPlacedTasksLength, (index) {
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {},
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              margin: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: taskColors[notPlacedTasks[index].color],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(notPlacedTasks[index].title),
+                              ),
                             ),
-                          ),
-                          child: Text(notPlacedTasks[index].title),
+                            Positioned(
+                              top: -2,
+                              left: -2,
+                              child: CircleAvatar(
+                                radius: 14,
+                                backgroundColor: Colors.redAccent,
+                                child: Text(
+                                  '1',
+                                  style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold))
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    }),
-                  ),
+                      ),
+                    );
+                  }),
                 ),
               ),
             ),
