@@ -36,3 +36,23 @@ List<ScheduledTask> getScheduledTasksForDay(DateTime day, List<Task> tasks) {
   scheduledTasks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
   return scheduledTasks;
 }
+
+
+List<Task> getNotPlacedTask(List<Task> tasks) {
+  final List<Task> notPlacedTasks = [];
+
+  for (final task in tasks) {
+    final hours = task.requiredHours;
+    if(task.startTime == null) {
+      notPlacedTasks.add(task);
+    }
+    else {
+      final placedTasks = task.startTime!.length;
+      if(placedTasks < hours) {
+        notPlacedTasks.add(task);
+      }
+    }   
+
+  }
+  return notPlacedTasks;
+}

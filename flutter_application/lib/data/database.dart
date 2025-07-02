@@ -1,6 +1,20 @@
-
+import 'package:flutter/material.dart';
 // 曜日のデータ
 List<String> weekdayName = ['', 'MON', 'TUE', 'WED', 'THUR', 'FRY', 'SAT', 'SUN'];
+
+
+final taskColors = [
+  Colors.yellow,
+  Colors.lightGreen,
+  Colors.red,
+  Colors.blue,
+  Colors.green,
+  Colors.pink,
+  Colors.cyan,
+  Colors.orange,
+  Colors.purple,
+  Colors.black,
+];
 
 
 enum RepeteType{

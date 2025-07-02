@@ -31,18 +31,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   List<Color> textColors = List.generate(24, (index) => Colors.white);
   List<String> taskTitles = List.generate(24, (index) => '');
   List<String> taskComments = List.generate(24, (index) => '');
-  final taskColors = [
-    Colors.yellow,
-    Colors.lightGreen,
-    Colors.red,
-    Colors.blue,
-    Colors.green,
-    Colors.pink,
-    Colors.cyan,
-    Colors.orange,
-    Colors.purple,
-    Colors.black,
-  ];
+
   //final taskProvider = ref.watch(taskControllerProvider);
 
   @override
@@ -82,6 +71,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     // build内にあるからbuildされるたびに毎回初期化される。
 
     final taskProvider = ref.watch(taskControllerProvider);
+    final List<Task> notPlacedTasks = getNotPlacedTask(taskProvider);
 
     void taskblock() {
       // somedayにおけるtaskデータを取得（タスク, 開始時間）
@@ -101,10 +91,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
           textColors[tasks[i].dateTime.hour] = Colors.black;
         }
       }
-    }
-
-    void notPlacedTaskBlock() {
-      
     }
 
     taskblock();
@@ -232,18 +218,20 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    children: List.generate(19, (index) {
+                    children: List.generate(notPlacedTasks.length, (index) {
                       return Padding(
                         padding: EdgeInsets.all(8),
                         child: ElevatedButton(
-                          onPressed: () {
-                            
-                          },
+                          onPressed: () {},
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: EdgeInsets.all(16),
+                            backgroundColor: taskColors[notPlacedTasks[index].color],
+                            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                            maximumSize: Size(80, 60), // 幅150, 高さ60
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular( 12, ), // ← ここで角丸を指定
+                            ),
                           ),
-                          child: Text('Box $index'),
+                          child: Text(notPlacedTasks[index].title),
                         ),
                       );
                     }),
