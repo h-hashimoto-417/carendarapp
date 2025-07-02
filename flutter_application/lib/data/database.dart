@@ -41,6 +41,25 @@ class Task {
     this.comment,
     this.startTime,
   });
+  Task copyWith({
+    String? title,
+    DateTime? limit,
+    int? requiredHours,
+    int? color,
+    RepeteType? repete,
+    String? comment,
+    List<DateTime>? startTime,
+  }) {
+    return Task(
+      title: title ?? this.title,
+      limit: limit ?? this.limit,
+      requiredHours: requiredHours ?? this.requiredHours,
+      color: color ?? this.color,
+      repete: repete ?? this.repete,
+      comment: comment ?? this.comment,
+      startTime: startTime ?? this.startTime,
+    );
+  }
 
 }
 

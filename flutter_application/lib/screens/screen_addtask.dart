@@ -74,19 +74,6 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
 
   @override
   Widget build(BuildContext context) {
-    final colorList = [
-      Colors.red,
-      Colors.blue,
-      Colors.yellow,
-      Colors.green,
-      Colors.pink,
-      Colors.cyan,
-      Colors.orange,
-      Colors.purple,
-      Colors.lightGreen,
-      Colors.black,
-    ];
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -150,7 +137,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             const SizedBox(height: 10),
             const Text('Color'),
             Wrap(
-              children: List.generate(colorList.length, (index) {
+              children: List.generate(taskColors.length, (index) {
                 return GestureDetector(
                   onTap: () {
                     setState(() {
@@ -162,7 +149,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
                     height: 30,
                     margin: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: colorList[index],
+                      color: taskColors[index],
                       border: Border.all(width: selectedColor == index ? 3 : 1),
                     ),
                   ),

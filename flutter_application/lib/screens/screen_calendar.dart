@@ -17,18 +17,6 @@ class ScreenCalendar extends HookConsumerWidget {
     final focusedDayState = useState(DateTime.now());
     final panelController = useMemoized(() => PanelController());
     final taskProvider = ref.watch(taskControllerProvider);
-    final taskColors = [
-      Colors.red,
-      Colors.blue,
-      Colors.yellow,
-      Colors.green,
-      Colors.pink,
-      Colors.cyan,
-      Colors.orange,
-      Colors.purple,
-      Colors.lightGreen,
-      Colors.black,
-    ];
 
     void goToPreviousMonth() {
       focusedDayState.value = DateTime(
