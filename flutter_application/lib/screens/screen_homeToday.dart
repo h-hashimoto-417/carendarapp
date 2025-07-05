@@ -21,6 +21,10 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   //final DateTime today = widget.today;
   final PanelController _panelController = PanelController();
   bool isEdditing = false;
+  //bool showEditButton = false;
+  Map<int, bool> showEditMap = {};
+  Map<int, int> numTempoPlacedTask = {};
+
   int countFromToday = 0;
   int month = 0;
   int day = 0;
@@ -60,6 +64,12 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
       weekday = someday.weekday;
       count = countFromToday;
     });
+  }
+
+  void _hideEditButton() {
+    setState(() {
+        showEditMap.updateAll((key, value) => false);
+    });    
   }
 
   @override
@@ -129,7 +139,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                 isEdditing = true;
               });
               _panelController.open(); // パネルを開く
-              
             },
           ),
         ],
@@ -142,7 +151,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         maxHeight: 350,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
 
-        
         panel: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -187,55 +195,112 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
               ),
             ),
             Expanded(
-              child: Container(
-                color: Colors.white, // パネル全体の背景色
-                
-                child: GridView.count(                  
-                  crossAxisCount: 2,  // グリッドの列
-                  childAspectRatio: 2.3,  // グリッドの比
-                  padding: EdgeInsets.all(8), crossAxisSpacing: 3, mainAxisSpacing: 3,
-                  children: List.generate(notPlacedTasksLength, (index) {
-                    return Material(
-                      color: Colors.transparent,
-                      child: InkWell( // ボタン機能を持たせる
-                        onTap: () {},
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent, // 背景タップも検知
+                onTap: _hideEditButton,
+                child: Container(
+                  color: Colors.white, // パネル全体の背景色
+
+                  child: GridView.count(
+                    crossAxisCount: 2, // グリッドの列
+                    childAspectRatio: 2.3, // グリッドの比
+                    padding: EdgeInsets.all(8),
+                    crossAxisSpacing: 3,
+                    mainAxisSpacing: 3,
+                    children: List.generate(notPlacedTasksLength, (index) {
+                      return Material(
+                        color: Colors.transparent,
                         child: Stack(
-                          clipBehavior: Clip.none,
                           children: [
-                            Container(
-                              margin: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: taskColors[notPlacedTasks[index].color],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Center(
-                                child: Text(notPlacedTasks[index].title),
+                            InkWell(
+                              // ボタン機能を持たせる
+                              onTap: () {
+                                _hideEditButton();
+                                if(!numTempoPlacedTask.containsKey(index)) {
+                                   numTempoPlacedTask[index] = 1;
+                                }else if(numTempoPlacedTask[index]! < notPlacedTasks[index].requiredHours){                                  
+                                  numTempoPlacedTask[index] = numTempoPlacedTask[index]! + 1;
+                                }
+                                
+                              },
+                              onLongPress: () {
+                                setState(() {
+                                  _hideEditButton();
+                                  showEditMap[index] = true;
+                                });
+                              },
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Container(
+                                    margin: EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          taskColors[notPlacedTasks[index].color],
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Center(
+                                      child: Text(notPlacedTasks[index].title),
+                                    ),
+                                  ),
+                                  /* ブロックの左上に赤丸を表示 */
+                                  Positioned(
+                                    top: -2,
+                                    left: -2,
+                                    child: CircleAvatar(
+                                      radius: 14,
+                                      backgroundColor: Colors.redAccent,
+                                      child: Text(
+                                        // 未配置のタスク数（タップするたび0になるまでデクリメント）
+                                        '${getnumOfNotPlacedTask(notPlacedTasks[index])
+                                        -(numTempoPlacedTask.containsKey(index) ? numTempoPlacedTask[index]! : 0)}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            /* ブロックの左上に赤丸を表示 */
-                            Positioned(
-                              top: -2,
-                              left: -2,
-                              child: CircleAvatar(
-                                radius: 14,
-                                backgroundColor: Colors.redAccent,
-                                child: Text(
-                                  '${getnumOfNotPlacedTask(notPlacedTasks[index])}',
-                                  style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold))
+                            if (showEditMap[index] == true)
+                              Positioned(
+                                top: 17,
+                                right: 0,
+                                child: TextButton(
+                                  onPressed: () {},
+                                  style: TextButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.blue,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    side: BorderSide(
+                                      color: Colors.black12,
+                                    ), // 薄い枠線（任意）
+                                  ),
+                                  child: Text(
+                                    '編集',
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                ),
                               ),
-                            ),
                           ],
                         ),
-                      ),
-                    );
-                  }),
+                      );
+                    }),
+                  ),
                 ),
               ),
             ),
           ],
         ),
-
-       
 
         // スクロールウィンドウの表示
         body: Stack(
@@ -420,4 +485,3 @@ class HalfMoonClipper extends CustomClipper<Path> {
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
-
