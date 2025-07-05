@@ -44,9 +44,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   }
 
   //@override
+  /* somedayに日付けを取得する */
   void _dateTransition() {
     setState(() {
-      //DateTime someday; // = widget.today.add(Duration(days: countFromToday));
       if (countFromToday == 0) {
         someday = widget.today;
       } else if (countFromToday > 0) {
@@ -72,6 +72,11 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
 
     final taskProvider = ref.watch(taskControllerProvider);
     final List<Task> notPlacedTasks = getNotPlacedTask(taskProvider);
+    int notPlacedTasksLength = 0;
+
+    if (notPlacedTasks != []) {
+      notPlacedTasksLength = notPlacedTasks.length;
+    }
 
     void taskblock() {
       // somedayにおけるtaskデータを取得（タスク, 開始時間）
@@ -124,11 +129,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                 isEdditing = true;
               });
               _panelController.open(); // パネルを開く
-
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => ScreenAddTask()),
-              // );
+              
             },
           ),
         ],
@@ -141,34 +142,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         maxHeight: 350,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
 
-        // panel: PreferredSize(
-        //   preferredSize: Size.fromHeight(30), // AppBar の高さ
-        //   child: AppBar(
-        //     automaticallyImplyLeading: false, // 戻るボタンなどを自動でつけない
-        //     backgroundColor: Colors.white,
-        //     elevation: 0,
-        //     leading: IconButton(
-        //       icon: Icon(Icons.save, size: 40, color: Colors.black),
-        //       onPressed: () {
-        //         _panelController.close();
-        //         setState(() => isEdditing = false);
-        //       },
-        //     ),
-        //     title: Text('編集中', style: TextStyle(color: Colors.black)),
-        //     centerTitle: true,
-        //     actions: [
-        //       IconButton(
-        //         icon: Icon(Icons.add_box,  size: 40, color: Colors.black),
-        //         onPressed: () {
-        //           Navigator.push(
-        //             context,
-        //             MaterialPageRoute(builder: (context) => ScreenAddTask()),
-        //           );
-        //         },
-        //       ),
-        //     ],
-        //   ),
-        // ),
+        
         panel: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -183,8 +157,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
 
                 children: [
                   //Spacer(),
+                  // 保存ボタン
                   IconButton(
-                    icon: Icon(Icons.save, size: 40, color: Colors.blue),
+                    icon: Icon(Icons.done, size: 40, color: Colors.blue),
                     onPressed: () {
                       _panelController.close(); // パネルを閉じる
                       setState(() {
@@ -196,6 +171,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     '編集中',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
+                  // 新規作成ボタン
                   IconButton(
                     icon: Icon(Icons.add_box, size: 40, color: Colors.blue),
                     onPressed: () {
@@ -213,66 +189,53 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
             Expanded(
               child: Container(
                 color: Colors.white, // パネル全体の背景色
-                child: SingleChildScrollView(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    children: List.generate(notPlacedTasks.length, (index) {
-                      return Padding(
-                        padding: EdgeInsets.all(8),
-                        child: ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: taskColors[notPlacedTasks[index].color],
-                            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                            maximumSize: Size(80, 60), // 幅150, 高さ60
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular( 12, ), // ← ここで角丸を指定
+                
+                child: GridView.count(                  
+                  crossAxisCount: 2,  // グリッドの列
+                  childAspectRatio: 2.3,  // グリッドの比
+                  padding: EdgeInsets.all(8), crossAxisSpacing: 3, mainAxisSpacing: 3,
+                  children: List.generate(notPlacedTasksLength, (index) {
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell( // ボタン機能を持たせる
+                        onTap: () {},
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              margin: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: taskColors[notPlacedTasks[index].color],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Center(
+                                child: Text(notPlacedTasks[index].title),
+                              ),
                             ),
-                          ),
-                          child: Text(notPlacedTasks[index].title),
+                            /* ブロックの左上に赤丸を表示 */
+                            Positioned(
+                              top: -2,
+                              left: -2,
+                              child: CircleAvatar(
+                                radius: 14,
+                                backgroundColor: Colors.redAccent,
+                                child: Text(
+                                  '${getnumOfNotPlacedTask(notPlacedTasks[index])}',
+                                  style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold))
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    }),
-                  ),
+                      ),
+                    );
+                  }),
                 ),
               ),
             ),
           ],
         ),
 
-        // panel: Padding(
-        //   padding: const EdgeInsets.all(16),
-        //   child: Row(
-        //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //     mainAxisSize: MainAxisSize.min,
-
-        //     children: [
-        //       //Spacer(),
-        //       IconButton(
-        //         icon: Icon(Icons.save, size: 32, color: Colors.blue),
-        //         onPressed: () {
-        //           _panelController.close(); // パネルを閉じる
-        //           setState(() {isEdditing = false;});
-        //         },
-        //       ),
-        //       Text(
-        //         '編集中',
-        //         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        //       ),
-        //       IconButton(
-        //         icon: Icon(Icons.add_box, size: 32, color: Colors.blue),
-        //         onPressed: () {
-        //           Navigator.push(
-        //             context,
-        //             MaterialPageRoute(builder: (context) => ScreenAddTask()),
-        //           );
-        //         },
-        //       ),
-        //     ],
-        //   ),
-        // ),
+       
 
         // スクロールウィンドウの表示
         body: Stack(
@@ -388,7 +351,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     child: Container(
                       width: 200, // 少し大きめに調整
                       height: 100, // 高さを調整
-                      color: const Color.fromARGB(255, 243, 194, 33),
+                      color: Colors.amberAccent,
                       child: Column(
                         //mainAxisAlignment: MainAxisAlignment.spaceBetween, // 上下に配置
                         crossAxisAlignment:
@@ -458,32 +421,3 @@ class HalfMoonClipper extends CustomClipper<Path> {
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
-
-
-
-// class ScreenCalendar extends HookConsumerWidget {
-//   const ScreenCalendar({super.key});
-
-//   @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     final selectedDayState = useState(DateTime.now());
-//     final focusedDayState = useState(DateTime.now());
-    
-
-//     void goToPreviousMonth() {
-//       focusedDayState.value = DateTime(
-//         focusedDayState.value.year,
-//         focusedDayState.value.month - 1,
-//       );
-//     }
-
-//     void goToNextMonth() {
-//       focusedDayState.value = DateTime(
-//         focusedDayState.value.year,
-//         focusedDayState.value.month + 1,
-//       );
-//     }
-
-//   return Scaffold(){};
-//   }
-// }
