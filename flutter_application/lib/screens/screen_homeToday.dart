@@ -351,7 +351,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     child: Container(
                       width: 200, // 少し大きめに調整
                       height: 100, // 高さを調整
-                      color: const Color.fromARGB(255, 243, 194, 33),
+                      color: Colors.amberAccent,
                       child: Column(
                         //mainAxisAlignment: MainAxisAlignment.spaceBetween, // 上下に配置
                         crossAxisAlignment:
