@@ -66,11 +66,15 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     });
   }
 
+  /* showEditMap（編集ボタン表示）の初期化 */
   void _hideEditButton() {
     setState(() {
-        showEditMap.updateAll((key, value) => false);
-    });    
+      showEditMap.updateAll((key, value) => false);
+    });
   }
+
+  /* タスクの配置場所を保存する */
+  void _saveTaskPlace() {}
 
   @override
   Widget build(BuildContext context) {
@@ -165,10 +169,11 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
 
                 children: [
                   //Spacer(),
-                  // 保存ボタン
+                  /* 保存ボタン */
                   IconButton(
                     icon: Icon(Icons.done, size: 40, color: Colors.blue),
                     onPressed: () {
+                      _saveTaskPlace();
                       _panelController.close(); // パネルを閉じる
                       setState(() {
                         isEdditing = false;
@@ -179,9 +184,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     '編集中',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  // 新規作成ボタン
+                  /* 新規作成ボタン */
                   IconButton(
-                    icon: Icon(Icons.add_box, size: 40, color: Colors.blue),
+                    icon: Icon(Icons.add_box_outlined, size: 40, color: Colors.blue),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -216,12 +221,13 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                               // ボタン機能を持たせる
                               onTap: () {
                                 _hideEditButton();
-                                if(!numTempoPlacedTask.containsKey(index)) {
-                                   numTempoPlacedTask[index] = 1;
-                                }else if(numTempoPlacedTask[index]! < notPlacedTasks[index].requiredHours){                                  
-                                  numTempoPlacedTask[index] = numTempoPlacedTask[index]! + 1;
+                                if (!numTempoPlacedTask.containsKey(index)) {
+                                  numTempoPlacedTask[index] = 1;
+                                } else if (numTempoPlacedTask[index]! <
+                                    notPlacedTasks[index].requiredHours) {
+                                  numTempoPlacedTask[index] =
+                                      numTempoPlacedTask[index]! + 1;
                                 }
-                                
                               },
                               onLongPress: () {
                                 setState(() {
@@ -236,7 +242,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                     margin: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color:
-                                          taskColors[notPlacedTasks[index].color],
+                                          taskColors[notPlacedTasks[index]
+                                              .color],
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Center(
@@ -252,8 +259,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                       backgroundColor: Colors.redAccent,
                                       child: Text(
                                         // 未配置のタスク数（タップするたび0になるまでデクリメント）
-                                        '${getnumOfNotPlacedTask(notPlacedTasks[index])
-                                        -(numTempoPlacedTask.containsKey(index) ? numTempoPlacedTask[index]! : 0)}',
+                                        '${getnumOfNotPlacedTask(notPlacedTasks[index]) - (numTempoPlacedTask.containsKey(index) ? numTempoPlacedTask[index]! : 0)}',
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Colors.white,
@@ -270,7 +276,14 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                 top: 17,
                                 right: 0,
                                 child: TextButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ScreenAddTask(),
+                                      ),
+                                    );
+                                  },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     foregroundColor: Colors.blue,
