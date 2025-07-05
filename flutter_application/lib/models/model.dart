@@ -56,3 +56,19 @@ List<Task> getNotPlacedTask(List<Task> tasks) {
   }
   return notPlacedTasks;
 }
+
+
+int getnumOfNotPlacedTask(Task task) {
+  int notPlacedNum = 0;
+  final hours = task.requiredHours;
+
+  if(task.startTime == null) {
+    notPlacedNum = hours;
+  }
+  else {
+    final placedTasks = task.startTime!.length;
+    notPlacedNum = hours - placedTasks;
+  }   
+  
+  return notPlacedNum;
+}

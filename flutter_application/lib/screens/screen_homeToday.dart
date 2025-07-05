@@ -157,8 +157,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
 
                 children: [
                   //Spacer(),
+                  // 保存ボタン
                   IconButton(
-                    icon: Icon(Icons.save, size: 40, color: Colors.blue),
+                    icon: Icon(Icons.done, size: 40, color: Colors.blue),
                     onPressed: () {
                       _panelController.close(); // パネルを閉じる
                       setState(() {
@@ -170,6 +171,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     '編集中',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
+                  // 新規作成ボタン
                   IconButton(
                     icon: Icon(Icons.add_box, size: 40, color: Colors.blue),
                     onPressed: () {
@@ -188,14 +190,14 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
               child: Container(
                 color: Colors.white, // パネル全体の背景色
                 
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  childAspectRatio: 2.3,
+                child: GridView.count(                  
+                  crossAxisCount: 2,  // グリッドの列
+                  childAspectRatio: 2.3,  // グリッドの比
                   padding: EdgeInsets.all(8), crossAxisSpacing: 3, mainAxisSpacing: 3,
                   children: List.generate(notPlacedTasksLength, (index) {
                     return Material(
                       color: Colors.transparent,
-                      child: InkWell(
+                      child: InkWell( // ボタン機能を持たせる
                         onTap: () {},
                         child: Stack(
                           clipBehavior: Clip.none,
@@ -210,6 +212,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                 child: Text(notPlacedTasks[index].title),
                               ),
                             ),
+                            /* ブロックの左上に赤丸を表示 */
                             Positioned(
                               top: -2,
                               left: -2,
@@ -217,8 +220,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                 radius: 14,
                                 backgroundColor: Colors.redAccent,
                                 child: Text(
-                                  '1',
-                                  style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold))
+                                  '${getnumOfNotPlacedTask(notPlacedTasks[index])}',
+                                  style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.bold))
                               ),
                             ),
                           ],
