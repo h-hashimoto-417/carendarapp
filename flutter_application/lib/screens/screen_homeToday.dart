@@ -213,8 +213,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       _panelController.close(); // パネルを閉じる
                       setState(() {
                         isEdditing = false;
-                      });
-                      _panelController.close(); // パネルを閉じる
+                      });                      
                     },
                   ),
                   Text(
