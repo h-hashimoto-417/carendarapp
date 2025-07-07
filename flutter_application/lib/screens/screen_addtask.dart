@@ -7,7 +7,8 @@ import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import 'package:flutter_application/screens/screen_homeToday.dart';
 
 class ScreenAddTask extends ConsumerStatefulWidget {
-  const ScreenAddTask({super.key});
+  const ScreenAddTask({super.key, required this.edittask});
+  final Task? edittask;
 
   @override
   ConsumerState<ScreenAddTask> createState() => _ScreenAddTaskState();
@@ -21,6 +22,21 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
   int selectedColor = -1;
   DateTime? limit;
   List<DateTime> startTimes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if(widget.edittask != null) {
+      titleController.text = widget.edittask!.title;
+      hoursController.text = '${widget.edittask!.requiredHours}';
+      selectedColor = widget.edittask!.color;
+      selectedRepeat = widget.edittask!.repete;
+      commentController.text = widget.edittask!.comment ?? '';
+      limit = widget.edittask!.limit;
+      startTimes = widget.edittask!.startTime ?? [];
+    }
+    
+  }
 
   void _saveTask() {
     try {
@@ -89,7 +105,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
           },
         ),
 
-        title: Text('New', style: TextStyle(color: Colors.black)),
+        title: Text((widget.edittask == null ? 'New' : 'Edit'), style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
       body: Padding(

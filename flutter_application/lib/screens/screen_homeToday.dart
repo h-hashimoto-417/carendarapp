@@ -111,23 +111,33 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         taskComments[tasks[i].dateTime.hour] = tasks[i].task.comment ?? '';
         if (tasks[i].task.color == 0 || tasks[i].task.color == 1) {
           textColors[tasks[i].dateTime.hour] = Colors.black;
-        }
-        else{
+        } else {
           textColors[i] = Colors.white;
         }
       }
 
-      taskHourMap.forEach((hour, task){
+      taskHourMap.forEach((hour, task) {
         timeColors[hour] = taskColors[task.color];
         taskTitles[hour] = task.title;
         taskComments[hour] = task.comment ?? '';
-        if(task.color == 0 || task.color == 1){
+        if (task.color == 0 || task.color == 1) {
           textColors[hour] = Colors.black;
+        } else {
+          textColors[hour] = Colors.white;
         }
-        else{
-          textColors[hour] =Colors.white;
-        }
+      });
+    }
 
+    /* タスクを仮配置する */
+    void placeTask(int index) {
+      setState(() {
+        taskHourMap[selectedHour!] = notPlacedTasks[index];
+        taskTitles[selectedHour!] = notPlacedTasks[index].title;
+        taskComments[selectedHour!] = notPlacedTasks[index].comment ?? '';
+        timeColors[selectedHour!] = taskColors[notPlacedTasks[index].color];
+        textColors[selectedHour!] =
+            notPlacedTasks[index].color <= 1 ? Colors.black : Colors.white;
+        selectedHour = selectedHour! + 1; // 選択解除
       });
     }
 
@@ -200,20 +210,22 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                         );
                         final upDatedTask = task.copyWith(
                           startTime: [
-                            if(task.startTime != null) ...task.startTime!,
+                            if (task.startTime != null) ...task.startTime!,
                             newDateTime,
-                          ]
+                          ],
                         );
-                        ref.read(taskControllerProvider.notifier).addTask(upDatedTask);
+                        ref
+                            .read(taskControllerProvider.notifier)
+                            .addTask(upDatedTask);
                       });
                       taskHourMap.clear(); // 追加したタスクをクリア
                       selectedHour = null; // 選択解除
-                      selectedTask = null; // 選択解除                
+                      selectedTask = null; // 選択解除
                       _saveTaskPlace();
                       _panelController.close(); // パネルを閉じる
                       setState(() {
                         isEdditing = false;
-                      });                      
+                      });
                     },
                   ),
                   Text(
@@ -222,12 +234,16 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                   ),
                   /* 新規作成ボタン */
                   IconButton(
-                    icon: Icon(Icons.add_box_outlined, size: 40, color: Colors.blue),
+                    icon: Icon(
+                      Icons.add_box_outlined,
+                      size: 40,
+                      color: Colors.blue,
+                    ),
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ScreenAddTask(),
+                          builder: (context) => ScreenAddTask(edittask: null),
                         ),
                       );
                     },
@@ -243,7 +259,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                   color: Colors.white, // パネル全体の背景色
 
                   child: GridView.count(
-
                     crossAxisCount: 2, // グリッドの列
                     childAspectRatio: 2.3, // グリッドの比
                     padding: EdgeInsets.all(8),
@@ -257,14 +272,19 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                             InkWell(
                               // ボタン機能を持たせる
                               onTap: () {
-                                _hideEditButton();
-                                if (!numTempoPlacedTask.containsKey(index)) {
-                                  numTempoPlacedTask[index] = 1;
-                                } else if (numTempoPlacedTask[index]! <
-                                    notPlacedTasks[index].requiredHours) {
-                                  numTempoPlacedTask[index] =
-                                      numTempoPlacedTask[index]! + 1;
+                                if (isEdditing && selectedHour != null) {
+                                  if (!numTempoPlacedTask.containsKey(index)) {
+                                    // 初めて配置するタスク
+                                    numTempoPlacedTask[index] = 1;
+                                    placeTask(index);
+                                  } else if (numTempoPlacedTask[index]! <
+                                      getnumOfNotPlacedTask(notPlacedTasks[index])) {
+                                    numTempoPlacedTask[index] =
+                                        numTempoPlacedTask[index]! + 1;
+                                    placeTask(index);
+                                  }
                                 }
+                                _hideEditButton();
                               },
                               onLongPress: () {
                                 setState(() {
@@ -317,7 +337,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ScreenAddTask(),
+                                        builder: (context) => ScreenAddTask(edittask: notPlacedTasks[index]),
                                       ),
                                     );
                                   },
@@ -366,7 +386,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       height: 690,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Colors.black, width: 1),
                         //boxShadow: [BoxShadow(color: Colors.black, blurRadius: 1)],
                       ),
