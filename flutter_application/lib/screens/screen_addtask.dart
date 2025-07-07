@@ -7,7 +7,8 @@ import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import 'package:flutter_application/screens/screen_homeToday.dart';
 
 class ScreenAddTask extends ConsumerStatefulWidget {
-  const ScreenAddTask({super.key});
+  const ScreenAddTask({super.key, required this.edittask});
+  final Task? edittask;
 
   @override
   ConsumerState<ScreenAddTask> createState() => _ScreenAddTaskState();
@@ -21,6 +22,23 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
   int selectedColor = -1;
   DateTime? limit;
   List<DateTime> startTimes = [];
+  int taskID = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if(widget.edittask != null) {
+      taskID = widget.edittask!.id;
+      titleController.text = widget.edittask!.title;
+      hoursController.text = '${widget.edittask!.requiredHours}';
+      selectedColor = widget.edittask!.color;
+      selectedRepeat = widget.edittask!.repete;
+      commentController.text = widget.edittask!.comment ?? '';
+      limit = widget.edittask!.limit;
+      startTimes = widget.edittask!.startTime ?? [];
+    }
+    
+  }
 
   void _saveTask() {
     try {
@@ -65,6 +83,51 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
     }
   }
 
+  void _updateTask() {
+    try {
+      final title = titleController.text.trim();
+      final hours = int.tryParse(hoursController.text.trim()) ?? 0;      
+
+      // 入力チェック
+      if (title.isEmpty) {
+        _showMessage('タイトルを入力してください');
+        return;
+      }
+
+      if (hours <= 0) {
+        _showMessage('必要時間を正しく入力してください');
+        return;
+      }
+
+      if (selectedColor < 0 || selectedColor >= 10) {
+        _showMessage('色を選択してください');
+        return;
+      }
+      final fixedTask = Task(
+        id: taskID,
+        title: title,
+        requiredHours: hours,
+        color: selectedColor,
+        repete: selectedRepeat,
+        comment: commentController.text.isEmpty ? null : commentController.text,
+        limit: limit,
+        startTime: startTimes.isNotEmpty ? startTimes : null,
+      );
+
+      ref.read(taskControllerProvider.notifier).updateTask(fixedTask);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScreenHomeToday(today: DateTime.now()),
+        ),
+      );
+    } catch (e) {
+      _showMessage('エラーが発生しました: $e');
+    }
+  }
+
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
@@ -88,7 +151,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
           },
         ),
 
-        title: Text('New', style: TextStyle(color: Colors.black)),
+        title: Text((widget.edittask == null ? 'New' : 'Edit'), style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
       body: Padding(
@@ -209,7 +272,9 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             //       }).toList(),
             // ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: _saveTask, child: const Text('Save')),
+            ElevatedButton(
+              onPressed: (widget.edittask == null ? _saveTask : _updateTask), 
+              child: const Text('Save')),
           ],
         ),
       ),

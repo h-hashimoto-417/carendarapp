@@ -183,6 +183,43 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
       });
     }
 
+    /* タスクを仮配置する */
+    void placeTask(int index) {
+      setState(() {
+        // 現在選択された時間にタスクを一旦配置
+        taskHourMap[selectedHour!] =
+            notPlacedTasks[index];
+
+        // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
+        Set<int> occupiedHours = {};
+
+        // 保存済みタスク（当日）
+        final scheduledTasks =
+            getScheduledTasksForDay(
+              someday,
+              taskProvider,
+            );
+        for (var task in scheduledTasks) {
+          occupiedHours.add(task.dateTime.hour);
+        }
+
+        // 配置中タスク
+        occupiedHours.addAll(taskHourMap.keys);
+
+        // ---- 次の空き時間を検索 ----
+        int nextHour = selectedHour! + 1;
+        while (nextHour < 24 &&
+            occupiedHours.contains(nextHour)) {
+          nextHour++;
+        }
+
+        // ---- 結果を反映 ----
+        selectedHour =
+            nextHour < 24 ? nextHour : null;
+        selectedTask = null;
+      });
+    }
+
     taskblock();
 
     return Scaffold(
@@ -267,6 +304,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                         final upDatedTask = task.copyWith(
                           startTime: updatedStartTimes,
                         );
+
                         ref
                             .read(taskControllerProvider.notifier)
                             .updateTask(upDatedTask);
@@ -279,7 +317,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       setState(() {
                         isEdditing = false;
                       });
-                      _panelController.close(); // パネルを閉じる
                     },
                   ),
                   Text(
@@ -297,7 +334,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ScreenAddTask(),
+                          builder: (context) => ScreenAddTask(edittask: null),
                         ),
                       );
                     },
@@ -327,7 +364,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                               // ボタン機能を持たせる
                               // ...existing code...
                               onTap: () {
-                                _hideEditButton();
                                 if (isEdditing && selectedHour != null) {
                                   // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
                                   Set<int> occupiedHours = {};
@@ -391,6 +427,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                       numTempoPlacedTask[index]! + 1;
                                 }
                                 // ...existing code...
+
                               },
                               onLongPress: () {
                                 setState(() {
@@ -443,7 +480,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ScreenAddTask(),
+                                        builder: (context) => ScreenAddTask(edittask: notPlacedTasks[index]),
                                       ),
                                     );
                                   },
@@ -492,7 +529,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       height: 690,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Colors.black, width: 1),
                         //boxShadow: [BoxShadow(color: Colors.black, blurRadius: 1)],
                       ),
