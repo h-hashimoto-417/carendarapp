@@ -364,6 +364,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                 ],
                               ),
                             ),
+                            /* タスク編集ボタンの表示 */
                             if (showEditMap[index] == true)
                               Positioned(
                                 top: 17,
