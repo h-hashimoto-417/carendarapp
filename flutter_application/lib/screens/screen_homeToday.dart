@@ -10,8 +10,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class ScreenHomeToday extends ConsumerStatefulWidget {
-  const ScreenHomeToday({super.key, required this.today});
+  const ScreenHomeToday({super.key, required this.today, required this.editmode});
   final DateTime today;
+  final bool editmode;
 
   @override
   ConsumerState<ScreenHomeToday> createState() => _ScreenHomeTodayState();
@@ -48,6 +49,13 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     month = someday.month;
     day = someday.day;
     weekday = someday.weekday;
+    // 初期表示時に editmode が true ならパネルを開く
+    if (widget.editmode) {
+      isEdditing = widget.editmode;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _panelController.open();
+      });
+    }    
   }
 
   //@override
@@ -94,6 +102,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     if (notPlacedTasks != []) {
       notPlacedTasksLength = notPlacedTasks.length;
     }
+    // if (isEdditing) {
+    //   _panelController.open(); // パネルを開く
+    // }
 
     void taskblock() {
       // somedayにおけるtaskデータを取得（タスク, 開始時間）

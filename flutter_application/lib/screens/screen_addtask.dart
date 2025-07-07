@@ -74,7 +74,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ScreenHomeToday(today: DateTime.now()),
+          builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true,),
         ),
       );
     } catch (e) {
@@ -118,7 +118,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ScreenHomeToday(today: DateTime.now()),
+          builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true),
         ),
       );
     } catch (e) {
@@ -133,7 +133,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ScreenHomeToday(today: DateTime.now()),
+          builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true),
         ),
       );
     } catch (e) {
@@ -159,7 +159,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ScreenHomeToday(today: DateTime.now()),
+                builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true),
               ),
             );
           },
