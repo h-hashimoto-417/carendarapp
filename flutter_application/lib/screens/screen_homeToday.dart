@@ -397,7 +397,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                     numTempoPlacedTask[index] = 1;
                                     placeTask(index);
                                   } else if (numTempoPlacedTask[index]! <
-                                      notPlacedTasks[index].requiredHours) {
+                                      getnumOfNotPlacedTask(notPlacedTasks[index])) {
                                     numTempoPlacedTask[index] =
                                         numTempoPlacedTask[index]! + 1;
                                     placeTask(index);
