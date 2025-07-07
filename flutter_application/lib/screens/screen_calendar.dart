@@ -6,7 +6,7 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:flutter_application/models/schedule_utils.dart';
+import 'package:flutter_application/models/model.dart';
 
 class ScreenCalendar extends HookConsumerWidget {
   const ScreenCalendar({super.key});
