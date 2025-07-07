@@ -93,7 +93,23 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         if (tasks[i].task.color == 0 || tasks[i].task.color == 1) {
           textColors[tasks[i].dateTime.hour] = Colors.black;
         }
+        else{
+          textColors[i] = Colors.white;
+        }
       }
+
+      taskHourMap.forEach((hour, task){
+        timeColors[hour] = taskColors[task.color];
+        taskTitles[hour] = task.title;
+        taskComments[hour] = task.comment ?? '';
+        if(task.color == 0 || task.color == 1){
+          textColors[hour] = Colors.black;
+        }
+        else{
+          textColors[hour] =Colors.white;
+        }
+
+      });
     }
 
     taskblock();
@@ -183,7 +199,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                 children: [
                   //Spacer(),
                   IconButton(
