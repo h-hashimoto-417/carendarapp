@@ -128,6 +128,43 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
       });
     }
 
+    /* タスクを仮配置する */
+    void placeTask(int index) {
+      setState(() {
+        // 現在選択された時間にタスクを一旦配置
+        taskHourMap[selectedHour!] =
+            notPlacedTasks[index];
+
+        // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
+        Set<int> occupiedHours = {};
+
+        // 保存済みタスク（当日）
+        final scheduledTasks =
+            getScheduledTasksForDay(
+              someday,
+              taskProvider,
+            );
+        for (var task in scheduledTasks) {
+          occupiedHours.add(task.dateTime.hour);
+        }
+
+        // 配置中タスク
+        occupiedHours.addAll(taskHourMap.keys);
+
+        // ---- 次の空き時間を検索 ----
+        int nextHour = selectedHour! + 1;
+        while (nextHour < 24 &&
+            occupiedHours.contains(nextHour)) {
+          nextHour++;
+        }
+
+        // ---- 結果を反映 ----
+        selectedHour =
+            nextHour < 24 ? nextHour : null;
+        selectedTask = null;
+      });
+    }
+
     taskblock();
 
     return Scaffold(
@@ -210,6 +247,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                               ...newTimes,
                             }.toList();
                         final upDatedTask = task.copyWith(
+
                           startTime: updatedStartTimes);
                         ref
                             .read(taskControllerProvider.notifier)
@@ -222,7 +260,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       _panelController.close(); // パネルを閉じる
                       setState(() {
                         isEdditing = false;
-                      });                      
+                      });
                     },
                   ),
                   Text(
@@ -240,7 +278,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ScreenAddTask(),
+                          builder: (context) => ScreenAddTask(edittask: null),
                         ),
                       );
                     },
@@ -269,50 +307,20 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                             InkWell(
                               // ボタン機能を持たせる
                               onTap: () {
-                                _hideEditButton();
                                 if (isEdditing && selectedHour != null) {
-                                  setState(() {
-                                    // 現在選択された時間にタスクを一旦配置
-                                    taskHourMap[selectedHour!] =
-                                        notPlacedTasks[index];
+                                  if (!numTempoPlacedTask.containsKey(index)) {
+                                    // 初めて配置するタスク
+                                    numTempoPlacedTask[index] = 1;
+                                    placeTask(index);
+                                  } else if (numTempoPlacedTask[index]! <
+                                      getnumOfNotPlacedTask(notPlacedTasks[index])) {
+                                    numTempoPlacedTask[index] =
+                                        numTempoPlacedTask[index]! + 1;
+                                    placeTask(index);
+                                  }
 
-                                    // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
-                                    Set<int> occupiedHours = {};
-
-                                    // 保存済みタスク（当日）
-                                    final scheduledTasks =
-                                        getScheduledTasksForDay(
-                                          someday,
-                                          taskProvider,
-                                        );
-                                    for (var task in scheduledTasks) {
-                                      occupiedHours.add(task.dateTime.hour);
-                                    }
-
-                                    // 配置中タスク
-                                    occupiedHours.addAll(taskHourMap.keys);
-
-                                    // ---- 次の空き時間を検索 ----
-                                    int nextHour = selectedHour! + 1;
-                                    while (nextHour < 24 &&
-                                        occupiedHours.contains(nextHour)) {
-                                      nextHour++;
-                                    }
-
-                                    // ---- 結果を反映 ----
-                                    selectedHour =
-                                        nextHour < 24 ? nextHour : null;
-                                    selectedTask = null;
-                                  });
-                                  return;
                                 }
-                                if (!numTempoPlacedTask.containsKey(index)) {
-                                  numTempoPlacedTask[index] = 1;
-                                } else if (numTempoPlacedTask[index]! <
-                                    notPlacedTasks[index].requiredHours) {
-                                  numTempoPlacedTask[index] =
-                                      numTempoPlacedTask[index]! + 1;
-                                }
+                                _hideEditButton();
                               },
                               onLongPress: () {
                                 setState(() {
@@ -365,7 +373,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ScreenAddTask(),
+                                        builder: (context) => ScreenAddTask(edittask: notPlacedTasks[index]),
                                       ),
                                     );
                                   },
@@ -414,7 +422,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       height: 690,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Colors.black, width: 1),
                         //boxShadow: [BoxShadow(color: Colors.black, blurRadius: 1)],
                       ),
