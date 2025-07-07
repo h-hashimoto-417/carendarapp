@@ -42,7 +42,6 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
         _showMessage('色を選択してください');
         return;
       }
-
       final newTask = Task(
         title: title,
         requiredHours: hours,
@@ -180,36 +179,35 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
               ),
             ),
 
-            const SizedBox(height: 20),
-            const Text('開始日時（任意・複数追加可能）'),
-            ElevatedButton(
-              onPressed: () {
-                DatePicker.showDateTimePicker(
-                  context,
-                  showTitleActions: true,
-                  minTime: DateTime(2020, 1, 1),
-                  maxTime: DateTime(2100, 12, 31),
-                  currentTime: DateTime.now(),
-                  locale: LocaleType.jp,
-                  onConfirm: (DateTime date) {
-                    setState(() {
-                      startTimes.add(date);
-                    });
-                  },
-                );
-              },
-              child: const Text('開始日時を追加'),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-                  startTimes.map((dt) {
-                    return Text(
-                      '・${dt.year}/${dt.month}/${dt.day} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}',
-                    );
-                  }).toList(),
-            ),
-
+            // const SizedBox(height: 20),
+            // const Text('開始日時（任意・複数追加可能）'),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     DatePicker.showDateTimePicker(
+            //       context,
+            //       showTitleActions: true,
+            //       minTime: DateTime(2020, 1, 1),
+            //       maxTime: DateTime(2100, 12, 31),
+            //       currentTime: DateTime.now(),
+            //       locale: LocaleType.jp,
+            //       onConfirm: (DateTime date) {
+            //         setState(() {
+            //           startTimes.add(date);
+            //         });
+            //       },
+            //     );
+            //   },
+            //   child: const Text('開始日時を追加'),
+            // ),
+            // Column(
+            //   crossAxisAlignment: CrossAxisAlignment.start,
+            //   children:
+            //       startTimes.map((dt) {
+            //         return Text(
+            //           '・${dt.year}/${dt.month}/${dt.day} ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}',
+            //         );
+            //       }).toList(),
+            // ),
             const SizedBox(height: 20),
             ElevatedButton(onPressed: _saveTask, child: const Text('Save')),
           ],

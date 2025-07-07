@@ -24,6 +24,7 @@ enum RepeteType{
 }
 
 class Task {
+  final int id;
   final String title;
   final DateTime? limit;
   final int requiredHours;
@@ -33,6 +34,7 @@ class Task {
   final List<DateTime>? startTime;
 
   const Task({
+    this.id = 0,
     required this.title,
     this.limit,
     required this.requiredHours,
@@ -42,6 +44,7 @@ class Task {
     this.startTime,
   });
   Task copyWith({
+    int? id,
     String? title,
     DateTime? limit,
     int? requiredHours,
@@ -51,6 +54,7 @@ class Task {
     List<DateTime>? startTime,
   }) {
     return Task(
+      id: id ?? this.id,
       title: title ?? this.title,
       limit: limit ?? this.limit,
       requiredHours: requiredHours ?? this.requiredHours,
