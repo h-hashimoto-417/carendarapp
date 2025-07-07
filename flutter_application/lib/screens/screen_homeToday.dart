@@ -111,23 +111,20 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         taskComments[tasks[i].dateTime.hour] = tasks[i].task.comment ?? '';
         if (tasks[i].task.color == 0 || tasks[i].task.color == 1) {
           textColors[tasks[i].dateTime.hour] = Colors.black;
-        }
-        else{
+        } else {
           textColors[i] = Colors.white;
         }
       }
 
-      taskHourMap.forEach((hour, task){
+      taskHourMap.forEach((hour, task) {
         timeColors[hour] = taskColors[task.color];
         taskTitles[hour] = task.title;
         taskComments[hour] = task.comment ?? '';
-        if(task.color == 0 || task.color == 1){
+        if (task.color == 0 || task.color == 1) {
           textColors[hour] = Colors.black;
+        } else {
+          textColors[hour] = Colors.white;
         }
-        else{
-          textColors[hour] =Colors.white;
-        }
-
       });
     }
 
@@ -191,24 +188,36 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                   IconButton(
                     icon: Icon(Icons.done, size: 40, color: Colors.blue),
                     onPressed: () {
+                      final Map<Task, List<int>> taskToHoursMap = {};
+
                       taskHourMap.forEach((hour, task) {
-                        final newDateTime = DateTime(
-                          someday.year,
-                          someday.month,
-                          someday.day,
-                          hour,
-                        );
+                        taskToHoursMap.putIfAbsent(task, () => []).add(hour);
+                      });
+
+                      taskToHoursMap.forEach((task, hours) {
+                        final newTimes =
+                            hours.map((hour) {
+                              return DateTime(
+                                someday.year,
+                                someday.month,
+                                someday.day,
+                                hour,
+                              );
+                            }).toList();
+                        final updatedStartTimes =
+                            {
+                              if (task.startTime != null) ...task.startTime!,
+                              ...newTimes,
+                            }.toList();
                         final upDatedTask = task.copyWith(
-                          startTime: [
-                            if(task.startTime != null) ...task.startTime!,
-                            newDateTime,
-                          ]
-                        );
-                        ref.read(taskControllerProvider.notifier).addTask(upDatedTask);
+                          startTime: updatedStartTimes);
+                        ref
+                            .read(taskControllerProvider.notifier)
+                            .updateTask(upDatedTask);
                       });
                       taskHourMap.clear(); // 追加したタスクをクリア
                       selectedHour = null; // 選択解除
-                      selectedTask = null; // 選択解除                
+                      selectedTask = null; // 選択解除
                       _saveTaskPlace();
                       _panelController.close(); // パネルを閉じる
                       setState(() {
@@ -223,7 +232,11 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                   ),
                   /* 新規作成ボタン */
                   IconButton(
-                    icon: Icon(Icons.add_box_outlined, size: 40, color: Colors.blue),
+                    icon: Icon(
+                      Icons.add_box_outlined,
+                      size: 40,
+                      color: Colors.blue,
+                    ),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -244,7 +257,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                   color: Colors.white, // パネル全体の背景色
 
                   child: GridView.count(
-
                     crossAxisCount: 2, // グリッドの列
                     childAspectRatio: 2.3, // グリッドの比
                     padding: EdgeInsets.all(8),
@@ -259,6 +271,42 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                               // ボタン機能を持たせる
                               onTap: () {
                                 _hideEditButton();
+                                if (isEdditing && selectedHour != null) {
+                                  setState(() {
+                                    // 現在選択された時間にタスクを一旦配置
+                                    taskHourMap[selectedHour!] =
+                                        notPlacedTasks[index];
+
+                                    // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
+                                    Set<int> occupiedHours = {};
+
+                                    // 保存済みタスク（当日）
+                                    final scheduledTasks =
+                                        getScheduledTasksForDay(
+                                          someday,
+                                          taskProvider,
+                                        );
+                                    for (var task in scheduledTasks) {
+                                      occupiedHours.add(task.dateTime.hour);
+                                    }
+
+                                    // 配置中タスク
+                                    occupiedHours.addAll(taskHourMap.keys);
+
+                                    // ---- 次の空き時間を検索 ----
+                                    int nextHour = selectedHour! + 1;
+                                    while (nextHour < 24 &&
+                                        occupiedHours.contains(nextHour)) {
+                                      nextHour++;
+                                    }
+
+                                    // ---- 結果を反映 ----
+                                    selectedHour =
+                                        nextHour < 24 ? nextHour : null;
+                                    selectedTask = null;
+                                  });
+                                  return;
+                                }
                                 if (!numTempoPlacedTask.containsKey(index)) {
                                   numTempoPlacedTask[index] = 1;
                                 } else if (numTempoPlacedTask[index]! <
