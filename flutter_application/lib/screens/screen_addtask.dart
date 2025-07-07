@@ -18,16 +18,30 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
   final hoursController = TextEditingController();
   final commentController = TextEditingController();
   RepeteType selectedRepeat = RepeteType.none;
-  int selectedColor = 0;
+  int selectedColor = -1;
   DateTime? limit;
   List<DateTime> startTimes = [];
 
   void _saveTask() {
     try {
-      final title = titleController.text;
-      final hours = int.tryParse(hoursController.text) ?? 1;
+      final title = titleController.text.trim();
+      final hours = int.tryParse(hoursController.text.trim()) ?? 0;
 
-      if (title.isEmpty) return;
+      // 入力チェック
+      if (title.isEmpty) {
+        _showMessage('タイトルを入力してください');
+        return;
+      }
+
+      if (hours <= 0) {
+        _showMessage('必要時間を正しく入力してください');
+        return;
+      }
+
+      if (selectedColor < 0 || selectedColor >= 10) {
+        _showMessage('色を選択してください');
+        return;
+      }
 
       final newTask = Task(
         title: title,
@@ -41,7 +55,6 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
 
       ref.read(taskControllerProvider.notifier).addTask(newTask);
 
-      // ScreenHomeTodayに遷移（todayに現在時刻を渡す）
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -49,28 +62,18 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
         ),
       );
     } catch (e) {
-      // print('タスク保存エラー: $e\n$stack');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('エラーが発生しました: $e')));
+      _showMessage('エラーが発生しました: $e');
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorList = [
-      Colors.red,
-      Colors.blue,
-      Colors.yellow,
-      Colors.green,
-      Colors.pink,
-      Colors.cyan,
-      Colors.orange,
-      Colors.purple,
-      Colors.lightGreen,
-      Colors.black,
-    ];
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -97,9 +100,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
               controller: titleController,
               decoration: const InputDecoration(labelText: 'Title'),
               maxLength: 15,
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(15)
-              ],
+              inputFormatters: [LengthLimitingTextInputFormatter(15)],
             ),
             TextField(
               controller: hoursController,
@@ -107,16 +108,15 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
               keyboardType: TextInputType.number,
               maxLength: 3,
               inputFormatters: [
-                LengthLimitingTextInputFormatter(3)
+                LengthLimitingTextInputFormatter(3),
+                FilteringTextInputFormatter.digitsOnly,
               ],
             ),
             TextField(
               controller: commentController,
               decoration: const InputDecoration(labelText: 'Comment'),
               maxLength: 30,
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(30)
-              ],
+              inputFormatters: [LengthLimitingTextInputFormatter(30)],
             ),
 
             const SizedBox(height: 10),
@@ -137,7 +137,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             const SizedBox(height: 10),
             const Text('Color'),
             Wrap(
-              children: List.generate(colorList.length, (index) {
+              children: List.generate(taskColors.length, (index) {
                 return GestureDetector(
                   onTap: () {
                     setState(() {
@@ -149,7 +149,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
                     height: 30,
                     margin: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: colorList[index],
+                      color: taskColors[index],
                       border: Border.all(width: selectedColor == index ? 3 : 1),
                     ),
                   ),

@@ -35,6 +35,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   List<Color> textColors = List.generate(24, (index) => Colors.white);
   List<String> taskTitles = List.generate(24, (index) => '');
   List<String> taskComments = List.generate(24, (index) => '');
+  int? selectedHour;
+  Task? selectedTask;
+  Map<int, Task> taskHourMap = {};
 
   //final taskProvider = ref.watch(taskControllerProvider);
 
@@ -109,7 +112,23 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         if (tasks[i].task.color == 0 || tasks[i].task.color == 1) {
           textColors[tasks[i].dateTime.hour] = Colors.black;
         }
+        else{
+          textColors[i] = Colors.white;
+        }
       }
+
+      taskHourMap.forEach((hour, task){
+        timeColors[hour] = taskColors[task.color];
+        taskTitles[hour] = task.title;
+        taskComments[hour] = task.comment ?? '';
+        if(task.color == 0 || task.color == 1){
+          textColors[hour] = Colors.black;
+        }
+        else{
+          textColors[hour] =Colors.white;
+        }
+
+      });
     }
 
     taskblock();
@@ -166,18 +185,36 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                 children: [
                   //Spacer(),
                   /* 保存ボタン */
                   IconButton(
                     icon: Icon(Icons.done, size: 40, color: Colors.blue),
                     onPressed: () {
+                      taskHourMap.forEach((hour, task) {
+                        final newDateTime = DateTime(
+                          someday.year,
+                          someday.month,
+                          someday.day,
+                          hour,
+                        );
+                        final upDatedTask = task.copyWith(
+                          startTime: [
+                            if(task.startTime != null) ...task.startTime!,
+                            newDateTime,
+                          ]
+                        );
+                        ref.read(taskControllerProvider.notifier).addTask(upDatedTask);
+                      });
+                      taskHourMap.clear(); // 追加したタスクをクリア
+                      selectedHour = null; // 選択解除
+                      selectedTask = null; // 選択解除                
                       _saveTaskPlace();
                       _panelController.close(); // パネルを閉じる
                       setState(() {
                         isEdditing = false;
                       });
+                      _panelController.close(); // パネルを閉じる
                     },
                   ),
                   Text(
@@ -207,6 +244,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                   color: Colors.white, // パネル全体の背景色
 
                   child: GridView.count(
+
                     crossAxisCount: 2, // グリッドの列
                     childAspectRatio: 2.3, // グリッドの比
                     padding: EdgeInsets.all(8),
@@ -338,55 +376,79 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                           children: [
                             ...List.generate(
                               24,
-                              (index) => Container(
-                                padding: EdgeInsets.all(10),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start, // 左寄せ
-                                  children: [
-                                    Text(
-                                      '$index : 00',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.blueGrey,
+                              (index) => InkWell(
+                                onTap:
+                                    isEdditing
+                                        ? () {
+                                          setState(() {
+                                            selectedHour = index;
+                                          });
+                                        }
+                                        : null,
+
+                                child: Container(
+                                  padding: EdgeInsets.all(10),
+                                  color:
+                                      selectedHour == index
+                                          ? Colors.grey[300]
+                                          : Colors.white,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start, // 左寄せ
+                                    children: [
+                                      Text(
+                                        '$index : 00',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.blueGrey,
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(height: 6), // テキストと長方形の間にスペース
-                                    Container(
-                                      width: double.infinity, // 横幅いっぱい
-                                      height: 60, // 高さ60の長方形
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: timeColors[index], // ボックスの色
-                                        borderRadius: BorderRadius.circular(7),
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        //crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            taskTitles[index], // task名を表示！
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              color: textColors[index],
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            //textAlign: TextAlign.center,
+                                      SizedBox(height: 6), // テキストと長方形の間にスペース
+                                      Container(
+                                        width: double.infinity, // 横幅いっぱい
+                                        height: 60, // 高さ60の長方形
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color:
+                                              selectedHour == index &&
+                                                      timeColors[index] ==
+                                                          Colors.white
+                                                  ? Colors
+                                                      .grey[300] // 選択されていて、色が白の場合
+                                                  : timeColors[index], // 選択されていない場合はtaskの色
+                                          // ボックスの色
+                                          borderRadius: BorderRadius.circular(
+                                            7,
                                           ),
-                                          Text(
-                                            taskComments[index], // comment(副題)を表示！
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: textColors[index],
+                                        ),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          //crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              taskTitles[index], // task名を表示！
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                color: textColors[index],
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              //textAlign: TextAlign.center,
                                             ),
-                                            //textAlign: TextAlign.center,
-                                          ),
-                                        ],
+                                            Text(
+                                              taskComments[index], // comment(副題)を表示！
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: textColors[index],
+                                              ),
+                                              //textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
