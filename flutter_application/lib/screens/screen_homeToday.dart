@@ -131,14 +131,38 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     /* タスクを仮配置する */
     void placeTask(int index) {
       setState(() {
-        taskHourMap[selectedHour!] = notPlacedTasks[index];
-        taskTitles[selectedHour!] = notPlacedTasks[index].title;
-        taskComments[selectedHour!] = notPlacedTasks[index].comment ?? '';
-        timeColors[selectedHour!] = taskColors[notPlacedTasks[index].color];
-        textColors[selectedHour!] =
-            notPlacedTasks[index].color <= 1 ? Colors.black : Colors.white;
-        selectedHour = selectedHour! + 1; // 選択解除
-      });
+                                    // 現在選択された時間にタスクを一旦配置
+                                    taskHourMap[selectedHour!] =
+                                        notPlacedTasks[index];
+
+                                    // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
+                                    Set<int> occupiedHours = {};
+
+                                    // 保存済みタスク（当日）
+                                    final scheduledTasks =
+                                        getScheduledTasksForDay(
+                                          someday,
+                                          taskProvider,
+                                        );
+                                    for (var task in scheduledTasks) {
+                                      occupiedHours.add(task.dateTime.hour);
+                                    }
+
+                                    // 配置中タスク
+                                    occupiedHours.addAll(taskHourMap.keys);
+
+                                    // ---- 次の空き時間を検索 ----
+                                    int nextHour = selectedHour! + 1;
+                                    while (nextHour < 24 &&
+                                        occupiedHours.contains(nextHour)) {
+                                      nextHour++;
+                                    }
+
+                                    // ---- 結果を反映 ----
+                                    selectedHour =
+                                        nextHour < 24 ? nextHour : null;
+                                    selectedTask = null;
+                                  });
     }
 
     taskblock();
@@ -201,22 +225,33 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                   IconButton(
                     icon: Icon(Icons.done, size: 40, color: Colors.blue),
                     onPressed: () {
+                      final Map<Task, List<int>> taskToHoursMap = {};
+
                       taskHourMap.forEach((hour, task) {
-                        final newDateTime = DateTime(
-                          someday.year,
-                          someday.month,
-                          someday.day,
-                          hour,
-                        );
+                        taskToHoursMap.putIfAbsent(task, () => []).add(hour);
+                      });
+
+                      taskToHoursMap.forEach((task, hours) {
+                        final newTimes =
+                            hours.map((hour) {
+                              return DateTime(
+                                someday.year,
+                                someday.month,
+                                someday.day,
+                                hour,
+                              );
+                            }).toList();
+                        final updatedStartTimes =
+                            {
+                              if (task.startTime != null) ...task.startTime!,
+                              ...newTimes,
+                            }.toList();
                         final upDatedTask = task.copyWith(
-                          startTime: [
-                            if (task.startTime != null) ...task.startTime!,
-                            newDateTime,
-                          ],
-                        );
+
+                          startTime: updatedStartTimes);
                         ref
                             .read(taskControllerProvider.notifier)
-                            .addTask(upDatedTask);
+                            .updateTask(upDatedTask);
                       });
                       taskHourMap.clear(); // 追加したタスクをクリア
                       selectedHour = null; // 選択解除
@@ -283,6 +318,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                         numTempoPlacedTask[index]! + 1;
                                     placeTask(index);
                                   }
+
                                 }
                                 _hideEditButton();
                               },
