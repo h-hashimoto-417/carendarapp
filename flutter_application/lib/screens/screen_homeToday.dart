@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-//import 'package:flutter_application/screens/screen_calendar.dart';
 import 'package:flutter_application/models/model.dart';
 import 'package:flutter_application/data/data_manager.dart';
 import 'package:flutter_application/screens/screen_addtask.dart';
-//import 'package:flutter_application/data/TaskManager.dart';
 import 'package:flutter_application/data/database.dart';
 import 'package:flutter_application/screens/screen_calendar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:collection/collection.dart';
 
 class ScreenHomeToday extends ConsumerStatefulWidget {
   const ScreenHomeToday({super.key, required this.today});
@@ -38,16 +37,29 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   int? selectedHour;
   Task? selectedTask;
   Map<int, Task> taskHourMap = {};
-
+  late List<GlobalKey<State<StatefulWidget>>> _hourKeys = List.generate(24, (_) => GlobalKey<State<StatefulWidget>>());
   //final taskProvider = ref.watch(taskControllerProvider);
 
   @override
   void initState() {
     super.initState();
+    _hourKeys = List.generate(24, (_) => GlobalKey<State<StatefulWidget>>());
     someday = widget.today;
     month = someday.month;
     day = someday.day;
     weekday = someday.weekday;
+
+    if (widget.today.hour >= 0 && widget.today.hour < 24) {
+    selectedHour = widget.today.hour + 1;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToSelectedHour();
+      setState(() {
+        selectedHour = null;
+      });
+    });
+  } else {
+    selectedHour = null;
+  }
   }
 
   //@override
@@ -74,6 +86,49 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     setState(() {
       showEditMap.updateAll((key, value) => false);
     });
+  }
+
+  void _removeScheduledAtHour(int hour) {
+    final scheduledTasks = getScheduledTasksForDay(
+      someday,
+      ref.read(taskControllerProvider),
+    );
+
+    final toRemove = scheduledTasks.firstWhereOrNull(
+      (st) => st.dateTime.hour == hour,
+    );
+
+    if (toRemove == null) return;
+
+    final task = toRemove.task;
+    final originalList = task.startTime ?? [];
+
+    final updatedList =
+        originalList.where((dt) {
+          return !(dt.year == someday.year &&
+              dt.month == someday.month &&
+              dt.day == someday.day &&
+              dt.hour == hour);
+        }).toList();
+
+    final updatedTask = task.copyWith(startTime: updatedList);
+
+    ref.read(taskControllerProvider.notifier).updateTask(updatedTask);
+
+    setState(() {
+      taskHourMap.remove(hour);
+    });
+  }
+
+  void _scrollToSelectedHour() {
+    if (selectedHour != null &&
+        _hourKeys[selectedHour!].currentContext != null) {
+      Scrollable.ensureVisible(
+        _hourKeys[selectedHour!].currentContext!,
+        duration: Duration(milliseconds: 300),
+        alignment: 0.2, // 上から20%くらいの位置に
+      );
+    }
   }
 
   /* タスクの配置場所を保存する */
@@ -247,8 +302,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                               ...newTimes,
                             }.toList();
                         final upDatedTask = task.copyWith(
+                          startTime: updatedStartTimes,
+                        );
 
-                          startTime: updatedStartTimes);
                         ref
                             .read(taskControllerProvider.notifier)
                             .updateTask(upDatedTask);
@@ -306,21 +362,72 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                           children: [
                             InkWell(
                               // ボタン機能を持たせる
+                              // ...existing code...
                               onTap: () {
                                 if (isEdditing && selectedHour != null) {
-                                  if (!numTempoPlacedTask.containsKey(index)) {
-                                    // 初めて配置するタスク
-                                    numTempoPlacedTask[index] = 1;
-                                    placeTask(index);
-                                  } else if (numTempoPlacedTask[index]! <
-                                      getnumOfNotPlacedTask(notPlacedTasks[index])) {
-                                    numTempoPlacedTask[index] =
-                                        numTempoPlacedTask[index]! + 1;
-                                    placeTask(index);
+                                  // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
+                                  Set<int> occupiedHours = {};
+
+                                  // 保存済みタスク（当日）
+                                  final scheduledTasks =
+                                      getScheduledTasksForDay(
+                                        someday,
+                                        taskProvider,
+                                      );
+                                  for (var task in scheduledTasks) {
+                                    occupiedHours.add(task.dateTime.hour);
                                   }
 
+                                  // 配置中タスク
+                                  occupiedHours.addAll(taskHourMap.keys);
+
+                                  // ---- selectedHour から次の空き時間を検索 ----
+                                  int nextHour = selectedHour!;
+                                  while (nextHour < 24 &&
+                                      occupiedHours.contains(nextHour)) {
+                                    nextHour++;
+                                  }
+
+                                  // 空き時間がなければ何もしない
+                                  if (nextHour >= 24) {
+                                    selectedHour = null;
+                                    selectedTask = null;
+                                    setState(() {});
+                                    return;
+                                  }
+
+                                  setState(() {
+                                    // 空いている時間に配置
+                                    taskHourMap[nextHour] =
+                                        notPlacedTasks[index];
+
+                                    // 次の空き時間をさらに検索
+                                    int followingHour = nextHour + 1;
+                                    while (followingHour < 24 &&
+                                        occupiedHours.contains(followingHour)) {
+                                      followingHour++;
+                                    }
+                                    selectedHour =
+                                        followingHour < 24
+                                            ? followingHour
+                                            : null;
+                                    selectedTask = null;
+                                  });
+                                  
+                                WidgetsBinding.instance.addPostFrameCallback((_,) {
+                                  _scrollToSelectedHour();
+                                });
+                                  return;
                                 }
-                                _hideEditButton();
+                                if (!numTempoPlacedTask.containsKey(index)) {
+                                  numTempoPlacedTask[index] = 1;
+                                } else if (numTempoPlacedTask[index]! <
+                                    notPlacedTasks[index].requiredHours) {
+                                  numTempoPlacedTask[index] =
+                                      numTempoPlacedTask[index]! + 1;
+                                }
+                                // ...existing code...
+
                               },
                               onLongPress: () {
                                 setState(() {
@@ -429,15 +536,47 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       child: SingleChildScrollView(
                         child: Column(
                           children: [
-                            ...List.generate(
-                              24,
-                              (index) => InkWell(
+                            ...List.generate(24, (index) {
+                              // ここでローカル変数として宣言
+                              final scheduledTasks = getScheduledTasksForDay(
+                                someday,
+                                ref.read(taskControllerProvider),
+                              );
+                              final scheduled = scheduledTasks.firstWhereOrNull(
+                                (st) => st.dateTime.hour == index,
+                              );
+                              // 配置中のタスクかどうか
+                              final isTempPlaced = taskHourMap.containsKey(
+                                index,
+                              );
+                              bool showDelete = false;
+                              if (isTempPlaced) {
+                                showDelete = true;
+                              } else if (scheduled != null) {
+                                if (scheduled.task.repete == RepeteType.none) {
+                                  showDelete = true;
+                                } else if (scheduled.task.startTime != null) {
+                                  showDelete = scheduled.task.startTime!.any(
+                                    (dt) =>
+                                        dt.year == someday.year &&
+                                        dt.month == someday.month &&
+                                        dt.day == someday.day &&
+                                        dt.hour == index,
+                                  );
+                                }
+                              }
+                              return InkWell(
+                                key: _hourKeys[index], // 各時間帯のキーを設定
                                 onTap:
                                     isEdditing
                                         ? () {
                                           setState(() {
                                             selectedHour = index;
                                           });
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) {
+                                                _scrollToSelectedHour();
+                                              });
                                         }
                                         : null,
 
@@ -459,54 +598,89 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                         ),
                                       ),
                                       SizedBox(height: 6), // テキストと長方形の間にスペース
-                                      Container(
-                                        width: double.infinity, // 横幅いっぱい
-                                        height: 60, // 高さ60の長方形
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color:
-                                              selectedHour == index &&
-                                                      timeColors[index] ==
-                                                          Colors.white
-                                                  ? Colors
-                                                      .grey[300] // 選択されていて、色が白の場合
-                                                  : timeColors[index], // 選択されていない場合はtaskの色
-                                          // ボックスの色
-                                          borderRadius: BorderRadius.circular(
-                                            7,
+                                      Stack(
+                                        children: [
+                                          Container(
+                                            width: double.infinity, // 横幅いっぱい
+                                            height: 60, // 高さ60の長方形
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  selectedHour == index &&
+                                                          timeColors[index] ==
+                                                              Colors.white
+                                                      ? Colors
+                                                          .grey[300] // 選択されていて、色が白の場合
+                                                      : timeColors[index], // 選択されていない場合はtaskの色
+                                              // ボックスの色
+                                              borderRadius:
+                                                  BorderRadius.circular(7),
+                                            ),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              //crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  taskTitles[index], // task名を表示！
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    color: textColors[index],
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  //textAlign: TextAlign.center,
+                                                ),
+                                                Text(
+                                                  taskComments[index], // comment(副題)を表示！
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: textColors[index],
+                                                  ),
+                                                  //textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          //crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              taskTitles[index], // task名を表示！
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                color: textColors[index],
-                                                fontWeight: FontWeight.bold,
+                                          if (isEdditing &&
+                                              timeColors[index] !=
+                                                  Colors.white &&
+                                              showDelete)
+                                            Positioned(
+                                              right: 10,
+                                              top: 10,
+                                              child: IconButton(
+                                                icon: Icon(
+                                                  Icons.delete,
+                                                  color: textColors[index],
+                                                ),
+                                                onPressed: () {
+                                                  if (isEdditing &&
+                                                      taskHourMap.containsKey(
+                                                        index,
+                                                      )) {
+                                                    setState(() {
+                                                      taskHourMap.remove(index);
+                                                      selectedHour = null;
+                                                    });
+                                                  } else {
+                                                    _removeScheduledAtHour(
+                                                      index,
+                                                    );
+                                                    setState(() {
+                                                      selectedHour = null;
+                                                    });
+                                                  }
+                                                },
                                               ),
-                                              //textAlign: TextAlign.center,
                                             ),
-                                            Text(
-                                              taskComments[index], // comment(副題)を表示！
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: textColors[index],
-                                              ),
-                                              //textAlign: TextAlign.center,
-                                            ),
-                                          ],
-                                        ),
+                                        ],
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            ),
+                              );
+                            }),
                             Container(
                               // リストの下部に余白を確保
                               height: 330, // 好きな高さに
