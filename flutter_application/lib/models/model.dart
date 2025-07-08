@@ -72,3 +72,14 @@ int getnumOfNotPlacedTask(Task task) {
   
   return notPlacedNum;
 }
+
+
+/// DateTime → int（Unix timestamp）
+int toInt(DateTime dateTime) {
+  return dateTime.millisecondsSinceEpoch;
+}
+
+/// int（Unix timestamp）→ DateTime
+DateTime fromInt(int timestamp) {
+  return DateTime.fromMillisecondsSinceEpoch(timestamp);
+}
