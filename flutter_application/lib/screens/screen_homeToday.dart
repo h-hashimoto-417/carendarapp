@@ -255,7 +255,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     void placeTask(int index) {
       setState(() {
         // 現在選択された時間にタスクを一旦配置
-        taskHourMap[selectedHour!] = notPlacedTasks[index];
+        // taskHourMap[selectedHour!] = notPlacedTasks[index];
 
         // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
         Set<int> occupiedHours = {};
