@@ -264,14 +264,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         final scheduledTasks = getScheduledTasksForDay(someday, taskProvider);
         for (var task in scheduledTasks) {
           occupiedHours.add(task.dateTime.hour);
-        }
-
-
-      // 保存済みタスク（当日）
-      final scheduledTasks = getScheduledTasksForDay(someday, taskProvider);
-      for (var task in scheduledTasks) {
-        occupiedHours.add(task.dateTime.hour);
-      }
+        }  
 
 
       // 配置中タスク
@@ -307,6 +300,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToSelectedHour();
       });
+    });
     }
 
     /* idを照らし合わせて未配置タスクの数をインクリメント */
@@ -596,29 +590,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                     placeTask(index);
                                   }
 
-                                  setState(() {
-                                    // 空いている時間に配置
-                                    taskHourMap[nextHour] =
-                                        notPlacedTasks[index];
-
-                                    // 次の空き時間をさらに検索
-                                    int followingHour = nextHour + 1;
-                                    while (followingHour < 24 &&
-                                        occupiedHours.contains(followingHour)) {
-                                      followingHour++;
-                                    }
-                                    selectedHour =
-                                        followingHour < 24
-                                            ? followingHour
-                                            : null;
-                                    selectedTask = null;
-                                  });
-
-                                  WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                  ) {
-                                    _scrollToSelectedHour();
-                                  });
+                                  
                                   return;
                                 }
                                 
