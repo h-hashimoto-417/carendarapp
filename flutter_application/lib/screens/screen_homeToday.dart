@@ -589,7 +589,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                         numTempoPlacedTask[notPlacedTasks[index].id]! + 1;
                                     placeTask(index);
                                   }
-
+                                  _hideEditButton();
                                   
                                   return;
                                 }
@@ -609,12 +609,15 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                     margin: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color:
-                                          taskColors[notPlacedTasks[index]
-                                              .color],
+                                          taskColors[notPlacedTasks[index].color],
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Center(
-                                      child: Text(notPlacedTasks[index].title),
+                                      child: Text(
+                                        notPlacedTasks[index].title,
+                                        style: TextStyle(color: (notPlacedTasks[index].color == 0 || notPlacedTasks[index].color == 1) ?
+                                                          Colors.black : Colors.white)
+                                      ),
                                     ),
                                   ),
                                   /* ブロックの左上に赤丸を表示 */
@@ -698,7 +701,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                   child: Center(
                     child: Container(
                       width: 350,
-                      height: 690,
+                      height: MediaQuery.of(context).size.height * 0.75,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
