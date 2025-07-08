@@ -705,7 +705,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                                       taskHourMap.containsKey(
                                                         index,
                                                       )) {
-                                                    setNumTempoPlacedTask(taskIDs[index]);                                                   
+                                                    setNumTempoPlacedTask(taskHourMap[index]!.id);                                                   
                                                     setState(() {
                                                       taskHourMap.remove(index);
                                                       selectedHour = null;
