@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/screens/screen_hometoday.dart';
+import 'package:flutter_application/screens/screen_home_today.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
       ),
       debugShowCheckedModeBanner: false,
       home: ScreenHomeToday(today: DateTime.now(), editmode: false,),

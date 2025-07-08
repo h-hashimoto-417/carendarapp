@@ -26,7 +26,7 @@ enum RepeteType{
 class Task {
   final int id;
   final String title;
-  final DateTime? limit;
+  final DateTime? deadline;
   final int requiredHours;
   final int color;
   final RepeteType repete;
@@ -36,7 +36,7 @@ class Task {
   const Task({
     this.id = 0,
     required this.title,
-    this.limit,
+    this.deadline,
     required this.requiredHours,
     required this.color,
     this.repete = RepeteType.none,
@@ -46,7 +46,7 @@ class Task {
   Task copyWith({
     int? id,
     String? title,
-    DateTime? limit,
+    DateTime? deadline,
     int? requiredHours,
     int? color,
     RepeteType? repete,
@@ -56,7 +56,7 @@ class Task {
     return Task(
       id: id ?? this.id,
       title: title ?? this.title,
-      limit: limit ?? this.limit,
+      deadline: deadline ?? this.deadline,
       requiredHours: requiredHours ?? this.requiredHours,
       color: color ?? this.color,
       repete: repete ?? this.repete,
@@ -64,6 +64,40 @@ class Task {
       startTime: startTime ?? this.startTime,
     );
   }
+
+  Map<String, dynamic> toMap({bool withoutId = false}) {
+    final map = <String, dynamic>{
+      'title': title,
+      'deadline': deadline?.toIso8601String(),
+      'requiredHours': requiredHours,
+      'color': color,
+      'repete': repete.index,
+      'comment': comment,
+      'startTime': startTime?.map((dt) => dt.toIso8601String()).join(','),
+    };
+
+    if (!withoutId) {
+      map['id'] = id;
+    }
+
+    return map;
+  }
+
+  static Task fromMap(Map<String, dynamic> map) => Task(
+    id: map['id'],
+    title: map['title'],
+    deadline: map['deadline'] != null ? DateTime.parse(map['deadline']) : null,
+    requiredHours: map['requiredHours'],
+    color: map['color'],
+    repete: RepeteType.values[map['repete']],
+    comment: map['comment'],
+    startTime: map['startTime'] != null && map['startTime'] != ''
+        ? (map['startTime'] as String)
+            .split(',')
+            .map((e) => DateTime.parse(e))
+            .toList()
+        : null,
+  );
 
 }
 
@@ -75,4 +109,6 @@ class ScheduledTask {
     required this.task,
     required this.dateTime,
   });
+
+
 }
