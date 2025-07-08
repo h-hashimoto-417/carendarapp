@@ -168,6 +168,52 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     //   _panelController.open(); // パネルを開く
     // }
 
+    Future<bool?> showSaveDialog(BuildContext context) {
+      return showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Center(child: Text('保存しますか？')),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true); // 保存
+                    },
+                    child: Text('保存'),
+                  ),
+                ),
+                SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(false); // 保存しない
+                    },
+                    child: Text('保存しない'),
+                  ),
+                ),
+                SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(null); // キャンセル
+                    },
+                    child: Text('キャンセル'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     void taskblock() {
       // somedayにおけるtaskデータを取得（タスク, 開始時間）
       List<ScheduledTask> tasks = getScheduledTasksForDay(
@@ -207,14 +253,26 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
 
     /* タスクを仮配置する */
     void placeTask(int index) {
-      // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
-      Set<int> occupiedHours = {};
+      setState(() {
+        // 現在選択された時間にタスクを一旦配置
+        taskHourMap[selectedHour!] = notPlacedTasks[index];
+
+        // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
+        Set<int> occupiedHours = {};
+
+        // 保存済みタスク（当日）
+        final scheduledTasks = getScheduledTasksForDay(someday, taskProvider);
+        for (var task in scheduledTasks) {
+          occupiedHours.add(task.dateTime.hour);
+        }
+
 
       // 保存済みタスク（当日）
       final scheduledTasks = getScheduledTasksForDay(someday, taskProvider);
       for (var task in scheduledTasks) {
         occupiedHours.add(task.dateTime.hour);
       }
+
 
       // 配置中タスク
       occupiedHours.addAll(taskHourMap.keys);
@@ -265,14 +323,70 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         leading: IconButton(
           icon: const Icon(Icons.calendar_month, size: 45), // 左端のアイコン
-          onPressed:
-              () => {
-                // カレンダーアイコンの動作を定義
+          onPressed: () async {
+            if (isEdditing) {
+              final result = await showSaveDialog(context);
+              if (result == true) {
+                // 保存してから移動
+                final Map<Task, List<int>> taskToHoursMap = {};
+                taskHourMap.forEach((hour, task) {
+                  taskToHoursMap.putIfAbsent(task, () => []).add(hour);
+                });
+                taskToHoursMap.forEach((task, hours) {
+                  final newTimes =
+                      hours.map((hour) {
+                        return DateTime(
+                          someday.year,
+                          someday.month,
+                          someday.day,
+                          hour,
+                        );
+                      }).toList();
+                  final updatedStartTimes =
+                      {
+                        if (task.startTime != null) ...task.startTime!,
+                        ...newTimes,
+                      }.toList();
+                  final upDatedTask = task.copyWith(
+                    startTime: updatedStartTimes,
+                  );
+                  ref
+                      .read(taskControllerProvider.notifier)
+                      .updateTask(upDatedTask);
+                });
+                setState(() {
+                  _panelController.close();
+                  selectedHour = null;
+                  taskHourMap.clear();
+                  isEdditing = false;
+                });
+                if (!context.mounted) return; // 画面がマウントされているか確認
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ScreenCalendar()),
-                ),
-              },
+                );
+              } else if (result == false) {
+                setState(() {
+                  _panelController.close();
+                  selectedHour = null;
+                  taskHourMap.clear();
+                  isEdditing = false;
+                });
+                if (!context.mounted) return; // 画面がマウントされているか確認
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ScreenCalendar()),
+                );
+              } else {
+                // キャンセル
+              }
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ScreenCalendar()),
+              );
+            }
+          },
         ),
         title: Text(
           '$month月', // 日付データを取得する！
@@ -369,13 +483,81 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       size: 40,
                       color: Colors.blue,
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ScreenAddTask(edittask: null),
-                        ),
-                      );
+                    onPressed: () async {
+                      if (isEdditing) {
+                        final result = await showSaveDialog(context);
+                        if (result == true) {
+                          // 保存してから移動
+                          final Map<Task, List<int>> taskToHoursMap = {};
+                          taskHourMap.forEach((hour, task) {
+                            taskToHoursMap
+                                .putIfAbsent(task, () => [])
+                                .add(hour);
+                          });
+                          taskToHoursMap.forEach((task, hours) {
+                            final newTimes =
+                                hours.map((hour) {
+                                  return DateTime(
+                                    someday.year,
+                                    someday.month,
+                                    someday.day,
+                                    hour,
+                                  );
+                                }).toList();
+                            final updatedStartTimes =
+                                {
+                                  if (task.startTime != null)
+                                    ...task.startTime!,
+                                  ...newTimes,
+                                }.toList();
+                            final upDatedTask = task.copyWith(
+                              startTime: updatedStartTimes,
+                            );
+                            ref
+                                .read(taskControllerProvider.notifier)
+                                .updateTask(upDatedTask);
+                          });
+                          setState(() {
+                            _panelController.close();
+                            selectedHour = null;
+                            taskHourMap.clear();
+                            isEdditing = false;
+                          });
+                          if (!context.mounted) return; // 画面がマウントされているか確認
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => ScreenAddTask(edittask: null),
+                            ),
+                          );
+                        } else if (result == false) {
+                          setState(() {
+                            _panelController.close();
+                            selectedHour = null;
+                            taskHourMap.clear();
+                            isEdditing = false;
+                          });
+
+                          if (!context.mounted) return; // 画面がマウントされているか確認
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => ScreenAddTask(edittask: null),
+                            ),
+                          );
+                        } else {
+                          // キャンセル
+                        }
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ScreenAddTask(edittask: null),
+                          ),
+                        );
+                      }
                     },
                   ),
                 ],
@@ -413,62 +595,34 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                         numTempoPlacedTask[notPlacedTasks[index].id]! + 1;
                                     placeTask(index);
                                   }
-                                  //   // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
-                                  //   Set<int> occupiedHours = {};
 
-                                  //   // 保存済みタスク（当日）
-                                  //   final scheduledTasks =
-                                  //       getScheduledTasksForDay(
-                                  //         someday,
-                                  //         taskProvider,
-                                  //       );
-                                  //   for (var task in scheduledTasks) {
-                                  //     occupiedHours.add(task.dateTime.hour);
-                                  //   }
+                                  setState(() {
+                                    // 空いている時間に配置
+                                    taskHourMap[nextHour] =
+                                        notPlacedTasks[index];
 
-                                  //   // 配置中タスク
-                                  //   occupiedHours.addAll(taskHourMap.keys);
+                                    // 次の空き時間をさらに検索
+                                    int followingHour = nextHour + 1;
+                                    while (followingHour < 24 &&
+                                        occupiedHours.contains(followingHour)) {
+                                      followingHour++;
+                                    }
+                                    selectedHour =
+                                        followingHour < 24
+                                            ? followingHour
+                                            : null;
+                                    selectedTask = null;
+                                  });
 
-                                  //   // ---- selectedHour から次の空き時間を検索 ----
-                                  //   int nextHour = selectedHour!;
-                                  //   while (nextHour < 24 &&
-                                  //       occupiedHours.contains(nextHour)) {
-                                  //     nextHour++;
-                                  //   }
-
-                                  //   // 空き時間がなければ何もしない
-                                  //   if (nextHour >= 24) {
-                                  //     selectedHour = null;
-                                  //     selectedTask = null;
-                                  //     setState(() {});
-                                  //     return;
-                                  //   }
-
-                                  //   setState(() {
-                                  //     // 空いている時間に配置
-                                  //     taskHourMap[nextHour] =
-                                  //         notPlacedTasks[index];
-
-                                  //     // 次の空き時間をさらに検索
-                                  //     int followingHour = nextHour + 1;
-                                  //     while (followingHour < 24 &&
-                                  //         occupiedHours.contains(followingHour)) {
-                                  //       followingHour++;
-                                  //     }
-                                  //     selectedHour =
-                                  //         followingHour < 24
-                                  //             ? followingHour
-                                  //             : null;
-                                  //     selectedTask = null;
-                                  //   });
-
-                                  // WidgetsBinding.instance.addPostFrameCallback((_,) {
-                                  //   _scrollToSelectedHour();
-                                  // });
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    _scrollToSelectedHour();
+                                  });
                                   return;
                                 }
+                                
 
-                                // ...existing code...
                               },
                               onLongPress: () {
                                 setState(() {
@@ -756,10 +910,63 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       size: 70,
                       color: Colors.amberAccent,
                     ),
-                    onPressed: () {
-                      countFromToday--;
-                      _dateTransition();
-                      //taskblock();
+                    onPressed: () async {
+                      if (isEdditing) {
+                        final result = await showSaveDialog(context);
+                        if (result == true) {
+                          // 保存してから移動
+                          final Map<Task, List<int>> taskToHoursMap = {};
+                          taskHourMap.forEach((hour, task) {
+                            taskToHoursMap
+                                .putIfAbsent(task, () => [])
+                                .add(hour);
+                          });
+                          taskToHoursMap.forEach((task, hours) {
+                            final newTimes =
+                                hours.map((hour) {
+                                  return DateTime(
+                                    someday.year,
+                                    someday.month,
+                                    someday.day,
+                                    hour,
+                                  );
+                                }).toList();
+                            final updatedStartTimes =
+                                {
+                                  if (task.startTime != null)
+                                    ...task.startTime!,
+                                  ...newTimes,
+                                }.toList();
+                            final upDatedTask = task.copyWith(
+                              startTime: updatedStartTimes,
+                            );
+                            ref
+                                .read(taskControllerProvider.notifier)
+                                .updateTask(upDatedTask);
+                          });
+                          setState(() {
+                            _panelController.close(); // パネルを閉じる
+                            selectedHour = null; // 選択解除
+                            taskHourMap.clear();
+                            isEdditing = false;
+                          });
+                          countFromToday--;
+                          _dateTransition();
+                        } else if (result == false) {
+                          // 保存せず仮置きmap初期化して移動
+                          setState(() {
+                            _panelController.close(); // パネルを閉じる
+                            selectedHour = null;
+                            taskHourMap.clear();
+                            isEdditing = false;
+                          });
+                          countFromToday--;
+                          _dateTransition();
+                        } else {}
+                      } else {
+                        countFromToday--;
+                        _dateTransition();
+                      }
                     },
                   ),
                   ClipPath(
@@ -797,11 +1004,63 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       size: 70,
                       color: Colors.amberAccent,
                     ),
-                    onPressed: () {
-                      countFromToday++;
-                      //someday = now.add(Duration(days: countFromToday));
-                      _dateTransition();
-                      //taskblock();
+                    onPressed: () async {
+                      if (isEdditing) {
+                        final result = await showSaveDialog(context);
+                        if (result == true) {
+                          // 保存してから移動
+                          final Map<Task, List<int>> taskToHoursMap = {};
+                          taskHourMap.forEach((hour, task) {
+                            taskToHoursMap
+                                .putIfAbsent(task, () => [])
+                                .add(hour);
+                          });
+                          taskToHoursMap.forEach((task, hours) {
+                            final newTimes =
+                                hours.map((hour) {
+                                  return DateTime(
+                                    someday.year,
+                                    someday.month,
+                                    someday.day,
+                                    hour,
+                                  );
+                                }).toList();
+                            final updatedStartTimes =
+                                {
+                                  if (task.startTime != null)
+                                    ...task.startTime!,
+                                  ...newTimes,
+                                }.toList();
+                            final upDatedTask = task.copyWith(
+                              startTime: updatedStartTimes,
+                            );
+                            ref
+                                .read(taskControllerProvider.notifier)
+                                .updateTask(upDatedTask);
+                          });
+                          setState(() {
+                            _panelController.close(); // パネルを閉じる
+                            selectedHour = null; // 選択解除
+                            taskHourMap.clear();
+                            isEdditing = false;
+                          });
+                          countFromToday++;
+                          _dateTransition();
+                        } else if (result == false) {
+                          // 保存せず仮置きmap初期化して移動
+                          setState(() {
+                            _panelController.close(); // パネルを閉じる
+                            selectedHour = null;
+                            taskHourMap.clear();
+                            isEdditing = false;
+                          });
+                          countFromToday++;
+                          _dateTransition();
+                        } else {}
+                      } else {
+                        countFromToday++;
+                        _dateTransition();
+                      }
                     },
                   ),
                 ],
