@@ -39,6 +39,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   List<Color> textColors = List.generate(24, (index) => Colors.white);
   List<String> taskTitles = List.generate(24, (index) => '');
   List<String> taskComments = List.generate(24, (index) => '');
+  List<int> taskIDs = List.generate(24, (index) => 0);
   int? selectedHour;
   Task? selectedTask;
   Map<int, Task> taskHourMap = {};
@@ -56,10 +57,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     month = someday.month;
     day = someday.day;
     weekday = someday.weekday;
-
+    isEdditing = widget.editmode;
     // 初期表示時に editmode が true ならパネルを開く
-    if (widget.editmode) {
-      isEdditing = widget.editmode;
+    if (isEdditing) {      
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _panelController.open();
       });
@@ -147,8 +147,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     }
   }
 
-  /* タスクの配置場所を保存する */
-  void _saveTaskPlace() {}
+  
 
   @override
   Widget build(BuildContext context) {
@@ -179,15 +178,19 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
       timeColors.fillRange(0, timeColors.length, Colors.white);
       textColors.fillRange(0, timeColors.length, Colors.white);
       taskTitles.fillRange(0, taskTitles.length, '');
+      taskComments.fillRange(0, taskComments.length, '');
+      taskIDs.fillRange(0, taskIDs.length, 0);
       for (int i = 0; i < tasks.length; i++) {
         timeColors[tasks[i].dateTime.hour] = taskColors[tasks[i].task.color];
         taskTitles[tasks[i].dateTime.hour] = tasks[i].task.title;
         taskComments[tasks[i].dateTime.hour] = tasks[i].task.comment ?? '';
+        taskIDs[tasks[i].dateTime.hour] = tasks[i].task.id;
         if (tasks[i].task.color == 0 || tasks[i].task.color == 1) {
           textColors[tasks[i].dateTime.hour] = Colors.black;
-        } else {
-          textColors[i] = Colors.white;
-        }
+        } 
+        // else {
+        //   textColors[i] = Colors.white;
+        // }
       }
 
       taskHourMap.forEach((hour, task) {
@@ -246,6 +249,13 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToSelectedHour();
       });
+    }
+
+    /* idを照らし合わせて未配置タスクの数をインクリメント */
+    void setNumTempoPlacedTask(int taskid) {      
+      setState(() {
+        numTempoPlacedTask[taskid] = (numTempoPlacedTask[taskid] == null) ? 0 : numTempoPlacedTask[taskid]! - 1;
+      });        
     }
 
     taskblock();
@@ -340,11 +350,12 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       taskHourMap.clear(); // 追加したタスクをクリア
                       selectedHour = null; // 選択解除
                       selectedTask = null; // 選択解除
-                      _saveTaskPlace();
+                      
                       _panelController.close(); // パネルを閉じる
                       setState(() {
                         isEdditing = false;
-                      });
+                        numTempoPlacedTask.updateAll((key, value) => 0);
+                      });                      
                     },
                   ),
                   Text(
@@ -393,13 +404,13 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                               // ...existing code...
                               onTap: () {
                                 if (isEdditing && selectedHour != null) {
-                                  if (!numTempoPlacedTask.containsKey(index)) {
-                                    numTempoPlacedTask[index] = 1;
+                                  if (!numTempoPlacedTask.containsKey(notPlacedTasks[index].id)) {
+                                    numTempoPlacedTask[notPlacedTasks[index].id] = 1;
                                     placeTask(index);
-                                  } else if (numTempoPlacedTask[index]! <
+                                  } else if (numTempoPlacedTask[notPlacedTasks[index].id]! <
                                       getnumOfNotPlacedTask(notPlacedTasks[index])) {
-                                    numTempoPlacedTask[index] =
-                                        numTempoPlacedTask[index]! + 1;
+                                    numTempoPlacedTask[notPlacedTasks[index].id] =
+                                        numTempoPlacedTask[notPlacedTasks[index].id]! + 1;
                                     placeTask(index);
                                   }
                                   //   // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
@@ -489,7 +500,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                       backgroundColor: Colors.redAccent,
                                       child: Text(
                                         // 未配置のタスク数（タップするたび0になるまでデクリメント）
-                                        '${getnumOfNotPlacedTask(notPlacedTasks[index]) - (numTempoPlacedTask.containsKey(index) ? numTempoPlacedTask[index]! : 0)}',
+                                        '${getnumOfNotPlacedTask(notPlacedTasks[index]) - 
+                                        (numTempoPlacedTask.containsKey(notPlacedTasks[index].id) ? numTempoPlacedTask[notPlacedTasks[index].id]! : 0)}',
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Colors.white,
@@ -693,10 +705,11 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                                       taskHourMap.containsKey(
                                                         index,
                                                       )) {
+                                                    setNumTempoPlacedTask(taskIDs[index]);                                                   
                                                     setState(() {
                                                       taskHourMap.remove(index);
                                                       selectedHour = null;
-                                                    });
+                                                    });                                                    
                                                   } else {
                                                     _removeScheduledAtHour(
                                                       index,
