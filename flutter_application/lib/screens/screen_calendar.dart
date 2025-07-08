@@ -102,7 +102,7 @@ class ScreenCalendar extends HookConsumerWidget {
               context,
 
               MaterialPageRoute(
-                builder: (context) => ScreenHomeToday(today: DateTime.now()),
+                builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: false,),
               ),
             );
           },
@@ -163,6 +163,7 @@ class ScreenCalendar extends HookConsumerWidget {
                               builder:
                                   (context) => ScreenHomeToday(
                                     today: selectedDayState.value,
+                                    editmode: false,
                                   ),
                             ),
                           );
