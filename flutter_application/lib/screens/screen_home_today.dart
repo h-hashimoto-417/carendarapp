@@ -894,7 +894,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     icon: Icon(
                       Icons.arrow_left,
                       size: 70,
-                      color: Colors.blueAccent,
+                      color: Colors.green,
                     ),
                     onPressed: () async {
                       if (isEdditing && taskHourMap.isNotEmpty) {
@@ -987,7 +987,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     icon: Icon(
                       Icons.arrow_right,
                       size: 70,
-                      color: Colors.blueAccent,
+                      color: Colors.green,
                     ),
                     onPressed: () async {
                       if (isEdditing && taskHourMap.isNotEmpty) {
