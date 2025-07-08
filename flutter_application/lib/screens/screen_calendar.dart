@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/data/data_manager.dart';
 import 'package:flutter_application/data/database.dart';
-import 'package:flutter_application/screens/screen_homeToday.dart';
+import 'package:flutter_application/screens/screen_hometoday.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -126,8 +126,8 @@ class ScreenCalendar extends HookConsumerWidget {
           );
           final deadlineTasks =
               taskProvider.where((task) {
-                return task.limit != null &&
-                    isSameDay(task.limit!, selectedDayState.value);
+                return task.deadline != null &&
+                    isSameDay(task.deadline!, selectedDayState.value);
               }).toList();
 
           return Column(
@@ -215,7 +215,7 @@ class ScreenCalendar extends HookConsumerWidget {
                               ),
                               children: [
                                 const TextSpan(
-                                  text: '〆切: ',
+                                  text: '期限: ',
                                   style: TextStyle(color: Colors.redAccent),
                                 ),
                                 ...deadlineTasks.asMap().entries.map((entry) {
@@ -278,8 +278,8 @@ class ScreenCalendar extends HookConsumerWidget {
           },
           // eventLoader: (date) {
           //   return taskProvider.where((task) {
-          //     final limit = task.limit;
-          //     return limit != null && isSameDay(limit, date);
+          //     final deadline = task.deadline;
+          //     return deadline != null && isSameDay(deadline, date);
           //   }).toList();
           // },
           locale: 'ja_JP',
@@ -304,7 +304,7 @@ class ScreenCalendar extends HookConsumerWidget {
                   taskProvider
                       .where(
                         (task) =>
-                            task.limit != null && isSameDay(task.limit!, date),
+                            task.deadline != null && isSameDay(task.deadline!, date),
                       )
                       .toList();
               return Container(
@@ -358,7 +358,7 @@ class ScreenCalendar extends HookConsumerWidget {
                   taskProvider
                       .where(
                         (task) =>
-                            task.limit != null && isSameDay(task.limit!, date),
+                            task.deadline != null && isSameDay(task.deadline!, date),
                       )
                       .toList();
               return Container(
@@ -426,8 +426,8 @@ class ScreenCalendar extends HookConsumerWidget {
             defaultBuilder: (context, date, focusedDay) {
               final events =
                   taskProvider.where((task) {
-                    final limit = task.limit;
-                    return limit != null && isSameDay(limit, date);
+                    final deadline = task.deadline;
+                    return deadline != null && isSameDay(deadline, date);
                   }).toList();
 
               return Column(

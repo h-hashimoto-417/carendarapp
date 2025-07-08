@@ -105,35 +105,36 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   }
 
   void _removeScheduledAtHour(int hour) {
-    final scheduledTasks = getScheduledTasksForDay(
-      someday,
-      ref.read(taskControllerProvider),
-    );
+    () async {
+      final scheduledTasks = getScheduledTasksForDay(
+        someday,
+        ref.read(taskControllerProvider),
+      );
 
-    final toRemove = scheduledTasks.firstWhereOrNull(
-      (st) => st.dateTime.hour == hour,
-    );
+      final toRemove = scheduledTasks.firstWhereOrNull(
+        (st) => st.dateTime.hour == hour,
+      );
 
-    if (toRemove == null) return;
+      if (toRemove == null) return;
 
-    final task = toRemove.task;
-    final originalList = task.startTime ?? [];
+      final task = toRemove.task;
+      final originalList = task.startTime ?? [];
 
-    final updatedList =
-        originalList.where((dt) {
-          return !(dt.year == someday.year &&
-              dt.month == someday.month &&
-              dt.day == someday.day &&
-              dt.hour == hour);
-        }).toList();
+      final updatedList =
+          originalList.where((dt) {
+            return !(dt.year == someday.year &&
+                dt.month == someday.month &&
+                dt.day == someday.day &&
+                dt.hour == hour);
+          }).toList();
 
-    final updatedTask = task.copyWith(startTime: updatedList);
+      final updatedTask = task.copyWith(startTime: updatedList);
 
-    ref.read(taskControllerProvider.notifier).updateTask(updatedTask);
-
-    setState(() {
-      taskHourMap.remove(hour);
-    });
+      await ref.read(taskControllerProvider.notifier).updateTask(updatedTask);
+      setState(() {
+        taskHourMap.remove(hour);
+      });
+    }();
   }
 
   void _scrollToSelectedHour() {
@@ -326,28 +327,28 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                 taskHourMap.forEach((hour, task) {
                   taskToHoursMap.putIfAbsent(task, () => []).add(hour);
                 });
-                taskToHoursMap.forEach((task, hours) {
-                  final newTimes =
-                      hours.map((hour) {
-                        return DateTime(
-                          someday.year,
-                          someday.month,
-                          someday.day,
-                          hour,
-                        );
-                      }).toList();
-                  final updatedStartTimes =
-                      {
-                        if (task.startTime != null) ...task.startTime!,
-                        ...newTimes,
-                      }.toList();
+                for (final entry in taskToHoursMap.entries) {
+                  final task = entry.key;
+                  final hours = entry.value;
+                  final newTimes = hours.map((hour) {
+                    return DateTime(
+                      someday.year,
+                      someday.month,
+                      someday.day,
+                      hour,
+                    );
+                  }).toList();
+                  final updatedStartTimes = {
+                    if (task.startTime != null) ...task.startTime!,
+                    ...newTimes,
+                  }.toList();
                   final upDatedTask = task.copyWith(
                     startTime: updatedStartTimes,
                   );
-                  ref
+                  await ref
                       .read(taskControllerProvider.notifier)
                       .updateTask(upDatedTask);
-                });
+                }
                 setState(() {
                   _panelController.close();
                   selectedHour = null;
@@ -432,38 +433,38 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                         taskToHoursMap.putIfAbsent(task, () => []).add(hour);
                       });
 
-                      taskToHoursMap.forEach((task, hours) {
-                        final newTimes =
-                            hours.map((hour) {
-                              return DateTime(
-                                someday.year,
-                                someday.month,
-                                someday.day,
-                                hour,
-                              );
-                            }).toList();
-                        final updatedStartTimes =
-                            {
-                              if (task.startTime != null) ...task.startTime!,
-                              ...newTimes,
-                            }.toList();
-                        final upDatedTask = task.copyWith(
-                          startTime: updatedStartTimes,
-                        );
-
-                        ref
-                            .read(taskControllerProvider.notifier)
-                            .updateTask(upDatedTask);
-                      });
-                      taskHourMap.clear(); // 追加したタスクをクリア
-                      selectedHour = null; // 選択解除
-                      selectedTask = null; // 選択解除
-                      
-                      _panelController.close(); // パネルを閉じる
-                      setState(() {
-                        isEdditing = false;
-                        numTempoPlacedTask.updateAll((key, value) => 0);
-                      });                      
+                      () async {
+                        for (final entry in taskToHoursMap.entries) {
+                          final task = entry.key;
+                          final hours = entry.value;
+                          final newTimes = hours.map((hour) {
+                            return DateTime(
+                              someday.year,
+                              someday.month,
+                              someday.day,
+                              hour,
+                            );
+                          }).toList();
+                          final updatedStartTimes = {
+                            if (task.startTime != null) ...task.startTime!,
+                            ...newTimes,
+                          }.toList();
+                          final upDatedTask = task.copyWith(
+                            startTime: updatedStartTimes,
+                          );
+                          await ref
+                              .read(taskControllerProvider.notifier)
+                              .updateTask(upDatedTask);
+                        }
+                        taskHourMap.clear(); // 追加したタスクをクリア
+                        selectedHour = null; // 選択解除
+                        selectedTask = null; // 選択解除
+                        _panelController.close(); // パネルを閉じる
+                        setState(() {
+                          isEdditing = false;
+                          numTempoPlacedTask.updateAll((key, value) => 0);
+                        });
+                      }();
                     },
                   ),
                   Text(
@@ -488,29 +489,28 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                 .putIfAbsent(task, () => [])
                                 .add(hour);
                           });
-                          taskToHoursMap.forEach((task, hours) {
-                            final newTimes =
-                                hours.map((hour) {
-                                  return DateTime(
-                                    someday.year,
-                                    someday.month,
-                                    someday.day,
-                                    hour,
-                                  );
-                                }).toList();
-                            final updatedStartTimes =
-                                {
-                                  if (task.startTime != null)
-                                    ...task.startTime!,
-                                  ...newTimes,
-                                }.toList();
-                            final upDatedTask = task.copyWith(
-                              startTime: updatedStartTimes,
+                        for (final entry in taskToHoursMap.entries) {
+                          final task = entry.key;
+                          final hours = entry.value;
+                          final newTimes = hours.map((hour) {
+                            return DateTime(
+                              someday.year,
+                              someday.month,
+                              someday.day,
+                              hour,
                             );
-                            ref
-                                .read(taskControllerProvider.notifier)
-                                .updateTask(upDatedTask);
-                          });
+                          }).toList();
+                          final updatedStartTimes = {
+                            if (task.startTime != null) ...task.startTime!,
+                            ...newTimes,
+                          }.toList();
+                          final upDatedTask = task.copyWith(
+                            startTime: updatedStartTimes,
+                          );
+                          await ref
+                              .read(taskControllerProvider.notifier)
+                              .updateTask(upDatedTask);
+                        }
                           setState(() {
                             _panelController.close();
                             selectedHour = null;
@@ -896,29 +896,28 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                 .putIfAbsent(task, () => [])
                                 .add(hour);
                           });
-                          taskToHoursMap.forEach((task, hours) {
-                            final newTimes =
-                                hours.map((hour) {
-                                  return DateTime(
-                                    someday.year,
-                                    someday.month,
-                                    someday.day,
-                                    hour,
-                                  );
-                                }).toList();
-                            final updatedStartTimes =
-                                {
-                                  if (task.startTime != null)
-                                    ...task.startTime!,
-                                  ...newTimes,
-                                }.toList();
+                          for (final entry in taskToHoursMap.entries) {
+                            final task = entry.key;
+                            final hours = entry.value;
+                            final newTimes = hours.map((hour) {
+                              return DateTime(
+                                someday.year,
+                                someday.month,
+                                someday.day,
+                                hour,
+                              );
+                            }).toList();
+                            final updatedStartTimes = {
+                              if (task.startTime != null) ...task.startTime!,
+                              ...newTimes,
+                            }.toList();
                             final upDatedTask = task.copyWith(
                               startTime: updatedStartTimes,
                             );
-                            ref
+                            await ref
                                 .read(taskControllerProvider.notifier)
                                 .updateTask(upDatedTask);
-                          });
+                          }
                           setState(() {
                             _panelController.close(); // パネルを閉じる
                             selectedHour = null; // 選択解除
@@ -990,29 +989,28 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                 .putIfAbsent(task, () => [])
                                 .add(hour);
                           });
-                          taskToHoursMap.forEach((task, hours) {
-                            final newTimes =
-                                hours.map((hour) {
-                                  return DateTime(
-                                    someday.year,
-                                    someday.month,
-                                    someday.day,
-                                    hour,
-                                  );
-                                }).toList();
-                            final updatedStartTimes =
-                                {
-                                  if (task.startTime != null)
-                                    ...task.startTime!,
-                                  ...newTimes,
-                                }.toList();
+                          for (final entry in taskToHoursMap.entries) {
+                            final task = entry.key;
+                            final hours = entry.value;
+                            final newTimes = hours.map((hour) {
+                              return DateTime(
+                                someday.year,
+                                someday.month,
+                                someday.day,
+                                hour,
+                              );
+                            }).toList();
+                            final updatedStartTimes = {
+                              if (task.startTime != null) ...task.startTime!,
+                              ...newTimes,
+                            }.toList();
                             final upDatedTask = task.copyWith(
                               startTime: updatedStartTimes,
                             );
-                            ref
+                            await ref
                                 .read(taskControllerProvider.notifier)
                                 .updateTask(upDatedTask);
-                          });
+                          }
                           setState(() {
                             _panelController.close(); // パネルを閉じる
                             selectedHour = null; // 選択解除

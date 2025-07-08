@@ -4,7 +4,7 @@ import 'package:flutter_application/data/database.dart';
 import 'package:flutter_application/data/data_manager.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
-import 'package:flutter_application/screens/screen_homeToday.dart';
+import 'package:flutter_application/screens/screen_hometoday.dart';
 
 class ScreenAddTask extends ConsumerStatefulWidget {
   const ScreenAddTask({super.key, required this.edittask});
@@ -20,7 +20,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
   final commentController = TextEditingController();
   RepeteType selectedRepeat = RepeteType.none;
   int selectedColor = -1;
-  DateTime? limit;
+  DateTime? deadline;
   List<DateTime> startTimes = [];
   int taskID = 0;
 
@@ -34,12 +34,12 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
       selectedColor = widget.edittask!.color;
       selectedRepeat = widget.edittask!.repete;
       commentController.text = widget.edittask!.comment ?? '';
-      limit = widget.edittask!.limit;
+      deadline = widget.edittask!.deadline;
       startTimes = widget.edittask!.startTime ?? [];
     }
   }
 
-  void _saveTask() {
+  Future<void> _saveTask() async {
     try {
       final title = titleController.text.trim();
       final hours = int.tryParse(hoursController.text.trim()) ?? 0;
@@ -65,24 +65,28 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
         color: selectedColor,
         repete: selectedRepeat,
         comment: commentController.text.isEmpty ? null : commentController.text,
-        limit: limit,
+        deadline: deadline,
         startTime: startTimes.isNotEmpty ? startTimes : null,
       );
 
-      ref.read(taskControllerProvider.notifier).addTask(newTask);
+      await ref.read(taskControllerProvider.notifier).addTask(newTask);
 
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true,),
+          builder:
+              (context) =>
+                  ScreenHomeToday(today: DateTime.now(), editmode: true),
         ),
       );
     } catch (e) {
       _showMessage('エラーが発生しました: $e');
+      // print(e);
     }
   }
 
-  void _updateTask() {
+  Future<void> _updateTask() async {
     try {
       final title = titleController.text.trim();
       final hours = int.tryParse(hoursController.text.trim()) ?? 0;
@@ -109,16 +113,18 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
         color: selectedColor,
         repete: selectedRepeat,
         comment: commentController.text.isEmpty ? null : commentController.text,
-        limit: limit,
+        deadline: deadline,
         startTime: startTimes.isNotEmpty ? startTimes : null,
       );
 
-      ref.read(taskControllerProvider.notifier).updateTask(fixedTask);
-
+      await ref.read(taskControllerProvider.notifier).updateTask(fixedTask);
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true),
+          builder:
+              (context) =>
+                  ScreenHomeToday(today: DateTime.now(), editmode: true),
         ),
       );
     } catch (e) {
@@ -126,21 +132,23 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
     }
   }
 
-  void _deleteTask(Task task) {
+  Future<void> _deleteTask(Task task) async {
     try {
-    ref.read(taskControllerProvider.notifier).deleteTask(task);
+      await ref.read(taskControllerProvider.notifier).deleteTask(task);
+      if (!mounted) return;
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true),
+          builder:
+              (context) =>
+                  ScreenHomeToday(today: DateTime.now(), editmode: true),
         ),
       );
     } catch (e) {
       _showMessage('エラーが発生しました: $e');
     }
   }
-
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(
@@ -159,7 +167,9 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true),
+                builder:
+                    (context) =>
+                        ScreenHomeToday(today: DateTime.now(), editmode: true),
               ),
             );
           },
@@ -170,89 +180,90 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
-        
+
         actions: [
           /* タスク編集モードのとき表示 */
-          widget.edittask != null ?
-          // IconButton(
-          //   icon: const Icon(Icons.delete_outline, color: Colors.red, size: 45), // 右端のアイコン
-          //   onPressed: () {
-          //         showDialog(
-          //           context: context,
-          //           builder: (BuildContext context) {
-          //             return AlertDialog(
-          //               shape: RoundedRectangleBorder(
-          //                 borderRadius: BorderRadius.circular(10),
-          //               ),
+          widget.edittask != null
+              ?
+              // IconButton(
+              //   icon: const Icon(Icons.delete_outline, color: Colors.red, size: 45), // 右端のアイコン
+              //   onPressed: () {
+              //         showDialog(
+              //           context: context,
+              //           builder: (BuildContext context) {
+              //             return AlertDialog(
+              //               shape: RoundedRectangleBorder(
+              //                 borderRadius: BorderRadius.circular(10),
+              //               ),
+              //               //title: const Text('このタスクを削除する？'),
+              //               content: const Text('このタスクを削除する？', style: TextStyle(fontSize: 16)),
+              //               actions: <Widget>[
+              //                 TextButton(
+              //                   child: const Text('いいえ'),
+              //                   onPressed: () {
+              //                     Navigator.of(context).pop(); // ダイアログを閉じる
+              //                   },
+              //                 ),
+              //                 TextButton(
+              //                   child: const Text('はい'),
+              //                   onPressed: () {
+              //                     Navigator.of(context).pop(); // ダイアログを閉じる
+              //                     _deleteTask(widget.edittask!); // 実際の削除処理
+              //                   },
+              //                 ),
+              //               ],
+              //             );
+              //           },
+              //         );
+              //   },
+              // )
+              TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
 
-          //               //title: const Text('このタスクを削除する？'),
-          //               content: const Text('このタスクを削除する？', style: TextStyle(fontSize: 16)),
-          //               actions: <Widget>[
-          //                 TextButton(
-          //                   child: const Text('いいえ'),
-          //                   onPressed: () {
-          //                     Navigator.of(context).pop(); // ダイアログを閉じる
-          //                   },
-          //                 ),
-          //                 TextButton(
-          //                   child: const Text('はい'),
-          //                   onPressed: () {
-          //                     Navigator.of(context).pop(); // ダイアログを閉じる
-          //                     _deleteTask(widget.edittask!); // 実際の削除処理
-          //                   },
-          //                 ),
-          //               ],
-          //             );
-          //           },
-          //         );
-
-          //   },
-          // )
-          TextButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-
-                    //title: const Text('このタスクを削除する？'),
-                    content: const Text('このタスクを削除する？', style: TextStyle(fontSize: 16)),
-                    actions: <Widget>[
-                      TextButton(
-                        child: const Text('いいえ'),
-                        onPressed: () {
-                          Navigator.of(context).pop(); // ダイアログを閉じる
-                        },
-                      ),
-                      TextButton(
-                        child: const Text('はい'),
-                        onPressed: () {
-                          Navigator.of(context).pop(); // ダイアログを閉じる
-                          _deleteTask(widget.edittask!); // 実際の削除処理
-                        },
-                      ),
-                    ],
+                        //title: const Text('このタスクを削除する？'),
+                        content: const Text(
+                          'このタスクを削除する？',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('いいえ'),
+                            onPressed: () {
+                              Navigator.of(context).pop(); // ダイアログを閉じる
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('はい'),
+                            onPressed: () {
+                              Navigator.of(context).pop(); // ダイアログを閉じる
+                              _deleteTask(widget.edittask!); // 実際の削除処理
+                            },
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
-              );
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              foregroundColor: Colors.red,
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(3),
-              ),
-              side: BorderSide(color: Colors.transparent), // 薄い枠線（任意）
-            ),
-            child: Text('削除', style: TextStyle(fontSize: 17)),
-          )
-          :  SizedBox.shrink(),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.red,
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  side: BorderSide(color: Colors.transparent), // 薄い枠線（任意）
+                ),
+                child: Text('削除', style: TextStyle(fontSize: 17)),
+              )
+              : SizedBox.shrink(),
         ],
-        
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -326,18 +337,18 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
                   showTitleActions: true,
                   minTime: DateTime(2020, 1, 1),
                   maxTime: DateTime(2100, 12, 31),
-                  currentTime: limit ?? DateTime.now(),
+                  currentTime: deadline ?? DateTime.now(),
                   locale: LocaleType.jp, // 日本語
                   onConfirm: (DateTime date) {
                     setState(() {
-                      limit = date;
+                      deadline = date;
                     });
                   },
                 );
               },
               child: Text(
-                limit != null
-                    ? '期限: ${limit!.year}/${limit!.month}/${limit!.day}'
+                deadline != null
+                    ? '期限: ${deadline!.year}/${deadline!.month}/${deadline!.day}'
                     : '期限を選択',
               ),
             ),
