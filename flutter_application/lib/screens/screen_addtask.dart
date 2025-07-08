@@ -27,7 +27,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
   @override
   void initState() {
     super.initState();
-    if(widget.edittask != null) {
+    if (widget.edittask != null) {
       taskID = widget.edittask!.id;
       titleController.text = widget.edittask!.title;
       hoursController.text = '${widget.edittask!.requiredHours}';
@@ -37,7 +37,6 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
       limit = widget.edittask!.limit;
       startTimes = widget.edittask!.startTime ?? [];
     }
-    
   }
 
   void _saveTask() {
@@ -75,7 +74,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ScreenHomeToday(today: DateTime.now()),
+          builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true,),
         ),
       );
     } catch (e) {
@@ -86,7 +85,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
   void _updateTask() {
     try {
       final title = titleController.text.trim();
-      final hours = int.tryParse(hoursController.text.trim()) ?? 0;      
+      final hours = int.tryParse(hoursController.text.trim()) ?? 0;
 
       // 入力チェック
       if (title.isEmpty) {
@@ -119,7 +118,22 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ScreenHomeToday(today: DateTime.now()),
+          builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true),
+        ),
+      );
+    } catch (e) {
+      _showMessage('エラーが発生しました: $e');
+    }
+  }
+
+  void _deleteTask(Task task) {
+    try {
+    ref.read(taskControllerProvider.notifier).deleteTask(task);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true),
         ),
       );
     } catch (e) {
@@ -145,14 +159,100 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ScreenHomeToday(today: DateTime.now()),
+                builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: true),
               ),
             );
           },
         ),
 
-        title: Text((widget.edittask == null ? 'New' : 'Edit'), style: TextStyle(color: Colors.black)),
+        title: Text(
+          (widget.edittask == null ? 'New' : 'Edit'),
+          style: TextStyle(color: Colors.black),
+        ),
         centerTitle: true,
+        
+        actions: [
+          /* タスク編集モードのとき表示 */
+          widget.edittask != null ?
+          // IconButton(
+          //   icon: const Icon(Icons.delete_outline, color: Colors.red, size: 45), // 右端のアイコン
+          //   onPressed: () {
+          //         showDialog(
+          //           context: context,
+          //           builder: (BuildContext context) {
+          //             return AlertDialog(
+          //               shape: RoundedRectangleBorder(
+          //                 borderRadius: BorderRadius.circular(10),
+          //               ),
+
+          //               //title: const Text('このタスクを削除する？'),
+          //               content: const Text('このタスクを削除する？', style: TextStyle(fontSize: 16)),
+          //               actions: <Widget>[
+          //                 TextButton(
+          //                   child: const Text('いいえ'),
+          //                   onPressed: () {
+          //                     Navigator.of(context).pop(); // ダイアログを閉じる
+          //                   },
+          //                 ),
+          //                 TextButton(
+          //                   child: const Text('はい'),
+          //                   onPressed: () {
+          //                     Navigator.of(context).pop(); // ダイアログを閉じる
+          //                     _deleteTask(widget.edittask!); // 実際の削除処理
+          //                   },
+          //                 ),
+          //               ],
+          //             );
+          //           },
+          //         );
+
+          //   },
+          // )
+          TextButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+
+                    //title: const Text('このタスクを削除する？'),
+                    content: const Text('このタスクを削除する？', style: TextStyle(fontSize: 16)),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text('いいえ'),
+                        onPressed: () {
+                          Navigator.of(context).pop(); // ダイアログを閉じる
+                        },
+                      ),
+                      TextButton(
+                        child: const Text('はい'),
+                        onPressed: () {
+                          Navigator.of(context).pop(); // ダイアログを閉じる
+                          _deleteTask(widget.edittask!); // 実際の削除処理
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.red,
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(3),
+              ),
+              side: BorderSide(color: Colors.transparent), // 薄い枠線（任意）
+            ),
+            child: Text('削除', style: TextStyle(fontSize: 17)),
+          )
+          :  SizedBox.shrink(),
+        ],
+        
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -273,8 +373,10 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             // ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: (widget.edittask == null ? _saveTask : _updateTask), 
-              child: const Text('Save')),
+              onPressed: (widget.edittask == null ? _saveTask : _updateTask),
+              child: const Text('Save'),
+            ),
+            const SizedBox(height: 120),
           ],
         ),
       ),

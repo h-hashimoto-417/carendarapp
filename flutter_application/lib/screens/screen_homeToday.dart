@@ -9,8 +9,13 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:collection/collection.dart';
 
 class ScreenHomeToday extends ConsumerStatefulWidget {
-  const ScreenHomeToday({super.key, required this.today});
+  const ScreenHomeToday({
+    super.key,
+    required this.today,
+    required this.editmode,
+  });
   final DateTime today;
+  final bool editmode;
 
   @override
   ConsumerState<ScreenHomeToday> createState() => _ScreenHomeTodayState();
@@ -34,6 +39,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
   List<Color> textColors = List.generate(24, (index) => Colors.white);
   List<String> taskTitles = List.generate(24, (index) => '');
   List<String> taskComments = List.generate(24, (index) => '');
+  List<int> taskIDs = List.generate(24, (index) => 0);
   int? selectedHour;
   Task? selectedTask;
   Map<int, Task> taskHourMap = {};
@@ -51,6 +57,13 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     month = someday.month;
     day = someday.day;
     weekday = someday.weekday;
+    isEdditing = widget.editmode;
+    // 初期表示時に editmode が true ならパネルを開く
+    if (isEdditing) {      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _panelController.open();
+      });
+    }
 
     if (widget.today.hour >= 0 && widget.today.hour < 24) {
       selectedHour = widget.today.hour + 1;
@@ -134,8 +147,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     }
   }
 
-  /* タスクの配置場所を保存する */
-  void _saveTaskPlace() {}
+  
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +164,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     if (notPlacedTasks != []) {
       notPlacedTasksLength = notPlacedTasks.length;
     }
+    // if (isEdditing) {
+    //   _panelController.open(); // パネルを開く
+    // }
 
     Future<bool?> showSaveDialog(BuildContext context) {
       return showDialog<bool>(
@@ -209,15 +224,19 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
       timeColors.fillRange(0, timeColors.length, Colors.white);
       textColors.fillRange(0, timeColors.length, Colors.white);
       taskTitles.fillRange(0, taskTitles.length, '');
+      taskComments.fillRange(0, taskComments.length, '');
+      taskIDs.fillRange(0, taskIDs.length, 0);
       for (int i = 0; i < tasks.length; i++) {
         timeColors[tasks[i].dateTime.hour] = taskColors[tasks[i].task.color];
         taskTitles[tasks[i].dateTime.hour] = tasks[i].task.title;
         taskComments[tasks[i].dateTime.hour] = tasks[i].task.comment ?? '';
+        taskIDs[tasks[i].dateTime.hour] = tasks[i].task.id;
         if (tasks[i].task.color == 0 || tasks[i].task.color == 1) {
           textColors[tasks[i].dateTime.hour] = Colors.black;
-        } else {
-          textColors[i] = Colors.white;
-        }
+        } 
+        // else {
+        //   textColors[i] = Colors.white;
+        // }
       }
 
       taskHourMap.forEach((hour, task) {
@@ -247,19 +266,54 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
           occupiedHours.add(task.dateTime.hour);
         }
 
-        // 配置中タスク
-        occupiedHours.addAll(taskHourMap.keys);
 
-        // ---- 次の空き時間を検索 ----
-        int nextHour = selectedHour! + 1;
-        while (nextHour < 24 && occupiedHours.contains(nextHour)) {
-          nextHour++;
+      // 保存済みタスク（当日）
+      final scheduledTasks = getScheduledTasksForDay(someday, taskProvider);
+      for (var task in scheduledTasks) {
+        occupiedHours.add(task.dateTime.hour);
+      }
+
+
+      // 配置中タスク
+      occupiedHours.addAll(taskHourMap.keys);
+
+      // ---- selectedHour から次の空き時間を検索 ----
+      int nextHour = selectedHour!;
+      while (nextHour < 24 && occupiedHours.contains(nextHour)) {
+        nextHour++;
+      }
+
+      // 空き時間がなければ何もしない
+      if (nextHour >= 24) {
+        selectedHour = null;
+        selectedTask = null;
+        setState(() {});
+        return;
+      }
+
+      setState(() {
+        // 空いている時間に配置
+        taskHourMap[nextHour] = notPlacedTasks[index];
+
+        // 次の空き時間をさらに検索
+        int followingHour = nextHour + 1;
+        while (followingHour < 24 && occupiedHours.contains(followingHour)) {
+          followingHour++;
         }
-
-        // ---- 結果を反映 ----
-        selectedHour = nextHour < 24 ? nextHour : null;
+        selectedHour = followingHour < 24 ? followingHour : null;
         selectedTask = null;
       });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToSelectedHour();
+      });
+    }
+
+    /* idを照らし合わせて未配置タスクの数をインクリメント */
+    void setNumTempoPlacedTask(int taskid) {      
+      setState(() {
+        numTempoPlacedTask[taskid] = (numTempoPlacedTask[taskid] == null) ? 0 : numTempoPlacedTask[taskid]! - 1;
+      });        
     }
 
     taskblock();
@@ -410,11 +464,12 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       taskHourMap.clear(); // 追加したタスクをクリア
                       selectedHour = null; // 選択解除
                       selectedTask = null; // 選択解除
-                      _saveTaskPlace();
+                      
                       _panelController.close(); // パネルを閉じる
                       setState(() {
                         isEdditing = false;
-                      });
+                        numTempoPlacedTask.updateAll((key, value) => 0);
+                      });                      
                     },
                   ),
                   Text(
@@ -531,35 +586,14 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                               // ...existing code...
                               onTap: () {
                                 if (isEdditing && selectedHour != null) {
-                                  // ---- 埋まっている時間の一覧を作成（保存済み + 配置中） ----
-                                  Set<int> occupiedHours = {};
-
-                                  // 保存済みタスク（当日）
-                                  final scheduledTasks =
-                                      getScheduledTasksForDay(
-                                        someday,
-                                        taskProvider,
-                                      );
-                                  for (var task in scheduledTasks) {
-                                    occupiedHours.add(task.dateTime.hour);
-                                  }
-
-                                  // 配置中タスク
-                                  occupiedHours.addAll(taskHourMap.keys);
-
-                                  // ---- selectedHour から次の空き時間を検索 ----
-                                  int nextHour = selectedHour!;
-                                  while (nextHour < 24 &&
-                                      occupiedHours.contains(nextHour)) {
-                                    nextHour++;
-                                  }
-
-                                  // 空き時間がなければ何もしない
-                                  if (nextHour >= 24) {
-                                    selectedHour = null;
-                                    selectedTask = null;
-                                    setState(() {});
-                                    return;
+                                  if (!numTempoPlacedTask.containsKey(notPlacedTasks[index].id)) {
+                                    numTempoPlacedTask[notPlacedTasks[index].id] = 1;
+                                    placeTask(index);
+                                  } else if (numTempoPlacedTask[notPlacedTasks[index].id]! <
+                                      getnumOfNotPlacedTask(notPlacedTasks[index])) {
+                                    numTempoPlacedTask[notPlacedTasks[index].id] =
+                                        numTempoPlacedTask[notPlacedTasks[index].id]! + 1;
+                                    placeTask(index);
                                   }
 
                                   setState(() {
@@ -587,13 +621,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                   });
                                   return;
                                 }
-                                if (!numTempoPlacedTask.containsKey(index)) {
-                                  numTempoPlacedTask[index] = 1;
-                                } else if (numTempoPlacedTask[index]! <
-                                    notPlacedTasks[index].requiredHours) {
-                                  numTempoPlacedTask[index] =
-                                      numTempoPlacedTask[index]! + 1;
-                                }
+                                
+
                               },
                               onLongPress: () {
                                 setState(() {
@@ -625,7 +654,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                       backgroundColor: Colors.redAccent,
                                       child: Text(
                                         // 未配置のタスク数（タップするたび0になるまでデクリメント）
-                                        '${getnumOfNotPlacedTask(notPlacedTasks[index]) - (numTempoPlacedTask.containsKey(index) ? numTempoPlacedTask[index]! : 0)}',
+                                        '${getnumOfNotPlacedTask(notPlacedTasks[index]) - 
+                                        (numTempoPlacedTask.containsKey(notPlacedTasks[index].id) ? numTempoPlacedTask[notPlacedTasks[index].id]! : 0)}',
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Colors.white,
@@ -637,6 +667,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                 ],
                               ),
                             ),
+                            /* タスク編集ボタンの表示 */
                             if (showEditMap[index] == true)
                               Positioned(
                                 top: 17,
@@ -828,10 +859,11 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                                       taskHourMap.containsKey(
                                                         index,
                                                       )) {
+                                                    setNumTempoPlacedTask(taskIDs[index]);                                                   
                                                     setState(() {
                                                       taskHourMap.remove(index);
                                                       selectedHour = null;
-                                                    });
+                                                    });                                                    
                                                   } else {
                                                     _removeScheduledAtHour(
                                                       index,

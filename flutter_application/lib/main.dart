@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
       ),
       debugShowCheckedModeBanner: false,
-      home: ScreenHomeToday(today: DateTime.now()),
+      home: ScreenHomeToday(today: DateTime.now(), editmode: false,),
       );
   }
 }
