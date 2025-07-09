@@ -176,7 +176,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
         ),
 
         title: Text(
-          (widget.edittask == null ? 'New' : 'Edit'),
+          (widget.edittask == null ? '新しいタスク' : 'タスクの編集'),
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
@@ -271,13 +271,13 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
+              decoration: const InputDecoration(labelText: 'タイトル'),
               maxLength: 15,
               inputFormatters: [LengthLimitingTextInputFormatter(15)],
             ),
             TextField(
               controller: hoursController,
-              decoration: const InputDecoration(labelText: 'Required Hours'),
+              decoration: const InputDecoration(labelText: '必要時間（時間）'),
               keyboardType: TextInputType.number,
               maxLength: 3,
               inputFormatters: [
@@ -287,19 +287,32 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             ),
             TextField(
               controller: commentController,
-              decoration: const InputDecoration(labelText: 'Comment'),
+              decoration: const InputDecoration(labelText: 'コメント（任意）'),
               maxLength: 30,
               inputFormatters: [LengthLimitingTextInputFormatter(30)],
             ),
 
             const SizedBox(height: 10),
-            const Text('Repete Type'),
+            const Text('繰り返し設定'),
             DropdownButton<RepeteType>(
               value: selectedRepeat,
-              items:
-                  RepeteType.values.map((rep) {
-                    return DropdownMenuItem(value: rep, child: Text(rep.name));
-                  }).toList(),
+              // value: selectedRepeat,
+              items:const [
+                DropdownMenuItem(
+                  value: RepeteType.none,
+                  child: Text('なし'),
+                ),
+                 DropdownMenuItem(
+                  value: RepeteType.daily,
+                  child: Text('毎日'),
+                ),
+                DropdownMenuItem(
+                  value: RepeteType.weekly,
+                  child: Text('毎週'),
+                ),
+              ],
+                //   return DropdownMenuItem(value: rep, child: Text(rep.name));
+                  // }).toList(),
               onChanged: (val) {
                 setState(() {
                   selectedRepeat = val ?? RepeteType.none;
@@ -308,7 +321,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             ),
 
             const SizedBox(height: 10),
-            const Text('Color'),
+            const Text('色'),
             Wrap(
               children: List.generate(taskColors.length, (index) {
                 return GestureDetector(
@@ -385,7 +398,7 @@ class _ScreenAddTaskState extends ConsumerState<ScreenAddTask> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: (widget.edittask == null ? _saveTask : _updateTask),
-              child: const Text('Save'),
+              child: const Text('保存'),
             ),
             const SizedBox(height: 120),
           ],

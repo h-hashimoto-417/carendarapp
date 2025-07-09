@@ -59,7 +59,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     weekday = someday.weekday;
     isEdditing = widget.editmode;
     // 初期表示時に editmode が true ならパネルを開く
-    if (isEdditing) {      
+    if (isEdditing) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _panelController.open();
       });
@@ -148,8 +148,6 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
     }
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     // DateTime now = widget.today;
@@ -175,7 +173,9 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
-            title: Center(child: Text('編集内容を保存しますか？', style: TextStyle(fontSize: 20),),),
+            title: Center(
+              child: Text('編集内容を保存しますか？', style: TextStyle(fontSize: 20)),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -234,7 +234,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         taskIDs[tasks[i].dateTime.hour] = tasks[i].task.id;
         if (tasks[i].task.color == 0 || tasks[i].task.color == 1) {
           textColors[tasks[i].dateTime.hour] = Colors.black;
-        } 
+        }
         // else {
         //   textColors[i] = Colors.white;
         // }
@@ -265,50 +265,52 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         final scheduledTasks = getScheduledTasksForDay(someday, taskProvider);
         for (var task in scheduledTasks) {
           occupiedHours.add(task.dateTime.hour);
-        }  
-
-
-      // 配置中タスク
-      occupiedHours.addAll(taskHourMap.keys);
-
-      // ---- selectedHour から次の空き時間を検索 ----
-      int nextHour = selectedHour!;
-      while (nextHour < 24 && occupiedHours.contains(nextHour)) {
-        nextHour++;
-      }
-
-      // 空き時間がなければ何もしない
-      if (nextHour >= 24) {
-        selectedHour = null;
-        selectedTask = null;
-        setState(() {});
-        return;
-      }
-
-      setState(() {
-        // 空いている時間に配置
-        taskHourMap[nextHour] = notPlacedTasks[index];
-
-        // 次の空き時間をさらに検索
-        int followingHour = nextHour + 1;
-        while (followingHour < 24 && occupiedHours.contains(followingHour)) {
-          followingHour++;
         }
-        selectedHour = followingHour < 24 ? followingHour : null;
-        selectedTask = null;
-      });
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToSelectedHour();
+        // 配置中タスク
+        occupiedHours.addAll(taskHourMap.keys);
+
+        // ---- selectedHour から次の空き時間を検索 ----
+        int nextHour = selectedHour!;
+        while (nextHour < 24 && occupiedHours.contains(nextHour)) {
+          nextHour++;
+        }
+
+        // 空き時間がなければ何もしない
+        if (nextHour >= 24) {
+          selectedHour = null;
+          selectedTask = null;
+          setState(() {});
+          return;
+        }
+
+        setState(() {
+          // 空いている時間に配置
+          taskHourMap[nextHour] = notPlacedTasks[index];
+
+          // 次の空き時間をさらに検索
+          int followingHour = nextHour + 1;
+          while (followingHour < 24 && occupiedHours.contains(followingHour)) {
+            followingHour++;
+          }
+          selectedHour = followingHour < 24 ? followingHour : null;
+          selectedTask = null;
+        });
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToSelectedHour();
+        });
       });
-    });
     }
 
     /* idを照らし合わせて未配置タスクの数をインクリメント */
-    void setNumTempoPlacedTask(int taskid) {      
+    void setNumTempoPlacedTask(int taskid) {
       setState(() {
-        numTempoPlacedTask[taskid] = (numTempoPlacedTask[taskid] == null) ? 0 : numTempoPlacedTask[taskid]! - 1;
-      });        
+        numTempoPlacedTask[taskid] =
+            (numTempoPlacedTask[taskid] == null)
+                ? 0
+                : numTempoPlacedTask[taskid]! - 1;
+      });
     }
 
     taskblock();
@@ -332,24 +334,30 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                 for (final entry in taskToHoursMap.entries) {
                   final task = entry.key;
                   final hours = entry.value;
-                  final newTimes = hours.map((hour) {
-                    return DateTime(
-                      someday.year,
-                      someday.month,
-                      someday.day,
-                      hour,
-                    );
-                  }).toList();
-                  final updatedStartTimes = {
-                    if (task.startTime != null) ...task.startTime!,
-                    ...newTimes,
-                  }.toList();
+                  final newTimes =
+                      hours.map((hour) {
+                        return DateTime(
+                          someday.year,
+                          someday.month,
+                          someday.day,
+                          hour,
+                        );
+                      }).toList();
+                  final updatedStartTimes =
+                      {
+                        if (task.startTime != null) ...task.startTime!,
+                        ...newTimes,
+                      }.toList();
                   final upDatedTask = task.copyWith(
                     startTime: updatedStartTimes,
                   );
                   await ref
                       .read(taskControllerProvider.notifier)
                       .updateTask(upDatedTask);
+
+                  await ref
+                      .read(taskControllerProvider.notifier)
+                      .cleanAllConflictingSingleTimeTasks();
                 }
                 setState(() {
                   _panelController.close();
@@ -415,15 +423,15 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         panel: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-              Container(
-                width: 40,
-                height: 3,
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+            Container(
+              width: 40,
+              height: 3,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(4),
               ),
+            ),
             Container(
               height: 50, // リボンの高さ
               decoration: BoxDecoration(
@@ -448,24 +456,29 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                         for (final entry in taskToHoursMap.entries) {
                           final task = entry.key;
                           final hours = entry.value;
-                          final newTimes = hours.map((hour) {
-                            return DateTime(
-                              someday.year,
-                              someday.month,
-                              someday.day,
-                              hour,
-                            );
-                          }).toList();
-                          final updatedStartTimes = {
-                            if (task.startTime != null) ...task.startTime!,
-                            ...newTimes,
-                          }.toList();
+                          final newTimes =
+                              hours.map((hour) {
+                                return DateTime(
+                                  someday.year,
+                                  someday.month,
+                                  someday.day,
+                                  hour,
+                                );
+                              }).toList();
+                          final updatedStartTimes =
+                              {
+                                if (task.startTime != null) ...task.startTime!,
+                                ...newTimes,
+                              }.toList();
                           final upDatedTask = task.copyWith(
                             startTime: updatedStartTimes,
                           );
                           await ref
                               .read(taskControllerProvider.notifier)
                               .updateTask(upDatedTask);
+                          await ref
+                              .read(taskControllerProvider.notifier)
+                              .cleanAllConflictingSingleTimeTasks();
                         }
                         taskHourMap.clear(); // 追加したタスクをクリア
                         selectedHour = null; // 選択解除
@@ -500,28 +513,35 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                 .putIfAbsent(task, () => [])
                                 .add(hour);
                           });
-                        for (final entry in taskToHoursMap.entries) {
-                          final task = entry.key;
-                          final hours = entry.value;
-                          final newTimes = hours.map((hour) {
-                            return DateTime(
-                              someday.year,
-                              someday.month,
-                              someday.day,
-                              hour,
+                          for (final entry in taskToHoursMap.entries) {
+                            final task = entry.key;
+                            final hours = entry.value;
+                            final newTimes =
+                                hours.map((hour) {
+                                  return DateTime(
+                                    someday.year,
+                                    someday.month,
+                                    someday.day,
+                                    hour,
+                                  );
+                                }).toList();
+                            final updatedStartTimes =
+                                {
+                                  if (task.startTime != null)
+                                    ...task.startTime!,
+                                  ...newTimes,
+                                }.toList();
+                            final upDatedTask = task.copyWith(
+                              startTime: updatedStartTimes,
                             );
-                          }).toList();
-                          final updatedStartTimes = {
-                            if (task.startTime != null) ...task.startTime!,
-                            ...newTimes,
-                          }.toList();
-                          final upDatedTask = task.copyWith(
-                            startTime: updatedStartTimes,
-                          );
-                          await ref
-                              .read(taskControllerProvider.notifier)
-                              .updateTask(upDatedTask);
-                        }
+                            await ref
+                                .read(taskControllerProvider.notifier)
+                                .updateTask(upDatedTask);
+
+                            await ref
+                                .read(taskControllerProvider.notifier)
+                                .cleanAllConflictingSingleTimeTasks();
+                          }
                           setState(() {
                             _panelController.close();
                             selectedHour = null;
@@ -591,21 +611,29 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                               // ...existing code...
                               onTap: () {
                                 if (isEdditing && selectedHour != null) {
-                                  if (!numTempoPlacedTask.containsKey(notPlacedTasks[index].id)) {
-                                    numTempoPlacedTask[notPlacedTasks[index].id] = 1;
+                                  if (!numTempoPlacedTask.containsKey(
+                                    notPlacedTasks[index].id,
+                                  )) {
+                                    numTempoPlacedTask[notPlacedTasks[index]
+                                            .id] =
+                                        1;
                                     placeTask(index);
-                                  } else if (numTempoPlacedTask[notPlacedTasks[index].id]! <
-                                      getnumOfNotPlacedTask(notPlacedTasks[index])) {
-                                    numTempoPlacedTask[notPlacedTasks[index].id] =
-                                        numTempoPlacedTask[notPlacedTasks[index].id]! + 1;
+                                  } else if (numTempoPlacedTask[notPlacedTasks[index]
+                                          .id]! <
+                                      getnumOfNotPlacedTask(
+                                        notPlacedTasks[index],
+                                      )) {
+                                    numTempoPlacedTask[notPlacedTasks[index]
+                                            .id] =
+                                        numTempoPlacedTask[notPlacedTasks[index]
+                                            .id]! +
+                                        1;
                                     placeTask(index);
                                   }
                                   _hideEditButton();
-                                  
+
                                   return;
                                 }
-                                
-
                               },
                               onLongPress: () {
                                 setState(() {
@@ -620,14 +648,23 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                     margin: EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color:
-                                          taskColors[notPlacedTasks[index].color],
+                                          taskColors[notPlacedTasks[index]
+                                              .color],
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Center(
                                       child: Text(
                                         notPlacedTasks[index].title,
-                                        style: TextStyle(color: (notPlacedTasks[index].color == 0 || notPlacedTasks[index].color == 1) ?
-                                                          Colors.black : Colors.white)
+                                        style: TextStyle(
+                                          color:
+                                              (notPlacedTasks[index].color ==
+                                                          0 ||
+                                                      notPlacedTasks[index]
+                                                              .color ==
+                                                          1)
+                                                  ? Colors.black
+                                                  : Colors.white,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -640,8 +677,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                       backgroundColor: Colors.redAccent,
                                       child: Text(
                                         // 未配置のタスク数（タップするたび0になるまでデクリメント）
-                                        '${getnumOfNotPlacedTask(notPlacedTasks[index]) - 
-                                        (numTempoPlacedTask.containsKey(notPlacedTasks[index].id) ? numTempoPlacedTask[notPlacedTasks[index].id]! : 0)}',
+                                        '${getnumOfNotPlacedTask(notPlacedTasks[index]) - (numTempoPlacedTask.containsKey(notPlacedTasks[index].id) ? numTempoPlacedTask[notPlacedTasks[index].id]! : 0)}',
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Colors.white,
@@ -845,11 +881,13 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                                       taskHourMap.containsKey(
                                                         index,
                                                       )) {
-                                                    setNumTempoPlacedTask(taskHourMap[index]!.id);                                                   
+                                                    setNumTempoPlacedTask(
+                                                      taskHourMap[index]!.id,
+                                                    );
                                                     setState(() {
                                                       taskHourMap.remove(index);
                                                       selectedHour = null;
-                                                    });                                                    
+                                                    });
                                                   } else {
                                                     _removeScheduledAtHour(
                                                       index,
@@ -891,11 +929,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    icon: Icon(
-                      Icons.arrow_left,
-                      size: 70,
-                      color: Colors.green,
-                    ),
+                    icon: Icon(Icons.arrow_left, size: 70, color: Colors.green),
                     onPressed: () async {
                       if (isEdditing && taskHourMap.isNotEmpty) {
                         final result = await showSaveDialog(context);
@@ -910,24 +944,31 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                           for (final entry in taskToHoursMap.entries) {
                             final task = entry.key;
                             final hours = entry.value;
-                            final newTimes = hours.map((hour) {
-                              return DateTime(
-                                someday.year,
-                                someday.month,
-                                someday.day,
-                                hour,
-                              );
-                            }).toList();
-                            final updatedStartTimes = {
-                              if (task.startTime != null) ...task.startTime!,
-                              ...newTimes,
-                            }.toList();
+                            final newTimes =
+                                hours.map((hour) {
+                                  return DateTime(
+                                    someday.year,
+                                    someday.month,
+                                    someday.day,
+                                    hour,
+                                  );
+                                }).toList();
+                            final updatedStartTimes =
+                                {
+                                  if (task.startTime != null)
+                                    ...task.startTime!,
+                                  ...newTimes,
+                                }.toList();
                             final upDatedTask = task.copyWith(
                               startTime: updatedStartTimes,
                             );
                             await ref
                                 .read(taskControllerProvider.notifier)
                                 .updateTask(upDatedTask);
+
+                            await ref
+                                .read(taskControllerProvider.notifier)
+                                .cleanAllConflictingSingleTimeTasks();
                           }
                           setState(() {
                             _panelController.close(); // パネルを閉じる
@@ -959,7 +1000,10 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     child: Container(
                       width: 200, // 少し大きめに調整
                       height: 100, // 高さを調整
-                      color: Theme.of(context).colorScheme.inversePrimary, // 半円の背景色
+                      color:
+                          Theme.of(
+                            context,
+                          ).colorScheme.inversePrimary, // 半円の背景色
                       child: Column(
                         //mainAxisAlignment: MainAxisAlignment.spaceBetween, // 上下に配置
                         crossAxisAlignment:
@@ -1003,24 +1047,31 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                           for (final entry in taskToHoursMap.entries) {
                             final task = entry.key;
                             final hours = entry.value;
-                            final newTimes = hours.map((hour) {
-                              return DateTime(
-                                someday.year,
-                                someday.month,
-                                someday.day,
-                                hour,
-                              );
-                            }).toList();
-                            final updatedStartTimes = {
-                              if (task.startTime != null) ...task.startTime!,
-                              ...newTimes,
-                            }.toList();
+                            final newTimes =
+                                hours.map((hour) {
+                                  return DateTime(
+                                    someday.year,
+                                    someday.month,
+                                    someday.day,
+                                    hour,
+                                  );
+                                }).toList();
+                            final updatedStartTimes =
+                                {
+                                  if (task.startTime != null)
+                                    ...task.startTime!,
+                                  ...newTimes,
+                                }.toList();
                             final upDatedTask = task.copyWith(
                               startTime: updatedStartTimes,
                             );
                             await ref
                                 .read(taskControllerProvider.notifier)
                                 .updateTask(upDatedTask);
+
+                            await ref
+                                .read(taskControllerProvider.notifier)
+                                .cleanAllConflictingSingleTimeTasks();
                           }
                           setState(() {
                             _panelController.close(); // パネルを閉じる

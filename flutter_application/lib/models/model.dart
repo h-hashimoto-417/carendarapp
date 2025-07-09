@@ -8,6 +8,11 @@ List<ScheduledTask> getScheduledTasksForDay(DateTime day, List<Task> tasks) {
     final times = task.startTime;
     if (times == null) continue;
 
+    final deadline = task.deadline ?? DateTime.utc(2100); // fallback deadline
+
+    // day自体がdeadlineを超えていれば、何も表示しない
+    if (day.isAfter(deadline)) continue;
+
     for (final dt in times) {
       switch (task.repete) {
         case RepeteType.none:
@@ -36,6 +41,7 @@ List<ScheduledTask> getScheduledTasksForDay(DateTime day, List<Task> tasks) {
   scheduledTasks.sort((a, b) => a.dateTime.compareTo(b.dateTime));
   return scheduledTasks;
 }
+
 
 
 List<Task> getNotPlacedTask(List<Task> tasks) {
