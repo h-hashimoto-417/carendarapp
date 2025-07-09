@@ -84,7 +84,7 @@ class ScreenCalendar extends HookConsumerWidget {
         return Text(
           shortTitle,
           style: TextStyle(
-            fontSize: 9,
+            fontSize: 8,
             color: taskColors[colorIndex],
             overflow: TextOverflow.ellipsis,
           ),
@@ -243,7 +243,7 @@ class ScreenCalendar extends HookConsumerWidget {
                       return ListTile(
                         title: Text('${dt.hour}:00　${task.title}'),
                         subtitle: Text(
-                          task.comment != null ? '${task.comment}' : 'コメントなし',
+                          task.comment != null ? '${task.comment}' : '',
                         ),
                         leading: CircleAvatar(
                           backgroundColor: Color(task.color),
