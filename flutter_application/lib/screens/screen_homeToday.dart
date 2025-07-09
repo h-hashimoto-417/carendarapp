@@ -318,7 +318,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         leading: IconButton(
           icon: const Icon(Icons.calendar_month, size: 45), // 左端のアイコン
           onPressed: () async {
-            if (isEdditing) {
+            if (isEdditing && taskHourMap.isNotEmpty) {
               final result = await showSaveDialog(context);
               if (result == true) {
                 // 保存してから移動
@@ -405,7 +405,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
       // ボトムシートの表示
       body: SlidingUpPanel(
         controller: _panelController,
-        minHeight: isEdditing ? 60 : 0,
+        minHeight: isEdditing ? 65 : 0,
         maxHeight: 350,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
 
@@ -413,9 +413,18 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
+              width: 40,
+              height: 3,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            Container(
               height: 50, // リボンの高さ
               decoration: BoxDecoration(
-                color: Colors.grey[200], // リボンの色
+                color: Colors.white, // リボンの色
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Row(
@@ -467,7 +476,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     },
                   ),
                   Text(
-                    '編集中',
+                    '未配置のタスク',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   /* 新規作成ボタン */
@@ -478,7 +487,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       color: Colors.blue,
                     ),
                     onPressed: () async {
-                      if (isEdditing) {
+                      if (isEdditing && taskHourMap.isNotEmpty) {
                         final result = await showSaveDialog(context);
                         if (result == true) {
                           // 保存してから移動
@@ -700,7 +709,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                 Expanded(
                   child: Center(
                     child: Container(
-                      width: 350,
+                      width: 320,
                       height: MediaQuery.of(context).size.height * 0.75,
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -760,7 +769,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                   color:
                                       selectedHour == index
                                           ? Colors.grey[300]
-                                          : Colors.white,
+                                          : Colors.transparent,
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start, // 左寄せ
@@ -883,10 +892,10 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     icon: Icon(
                       Icons.arrow_left,
                       size: 70,
-                      color: Colors.amberAccent,
+                      color: Colors.green,
                     ),
                     onPressed: () async {
-                      if (isEdditing) {
+                      if (isEdditing && taskHourMap.isNotEmpty) {
                         final result = await showSaveDialog(context);
                         if (result == true) {
                           // 保存してから移動
@@ -949,7 +958,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     child: Container(
                       width: 200, // 少し大きめに調整
                       height: 100, // 高さを調整
-                      color: Colors.amberAccent,
+                      color: Theme.of(context).colorScheme.inversePrimary, // 半円の背景色,
                       child: Column(
                         //mainAxisAlignment: MainAxisAlignment.spaceBetween, // 上下に配置
                         crossAxisAlignment:
@@ -977,10 +986,10 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                     icon: Icon(
                       Icons.arrow_right,
                       size: 70,
-                      color: Colors.amberAccent,
+                      color: Colors.green,
                     ),
                     onPressed: () async {
-                      if (isEdditing) {
+                      if (isEdditing && taskHourMap.isNotEmpty) {
                         final result = await showSaveDialog(context);
                         if (result == true) {
                           // 保存してから移動

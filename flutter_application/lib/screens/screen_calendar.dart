@@ -215,7 +215,7 @@ class ScreenCalendar extends HookConsumerWidget {
                               ),
                               children: [
                                 const TextSpan(
-                                  text: '〆切: ',
+                                  text: '期限: ',
                                   style: TextStyle(color: Colors.redAccent),
                                 ),
                                 ...deadlineTasks.asMap().entries.map((entry) {
@@ -243,7 +243,7 @@ class ScreenCalendar extends HookConsumerWidget {
                       return ListTile(
                         title: Text('${dt.hour}:00　${task.title}'),
                         subtitle: Text(
-                          task.comment != null ? '${task.comment}' : 'コメントなし',
+                          task.comment != null ? '${task.comment}' : '',
                         ),
                         leading: CircleAvatar(
                           backgroundColor: Color(task.color),
