@@ -112,9 +112,11 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
         ref.read(taskControllerProvider),
       );
 
-      final toRemove = scheduledTasks.firstWhereOrNull(
-        (st) => st.dateTime.hour == hour,
-      );
+      final toRemove =
+          scheduledTasks
+              .where((st) => !st.exception)
+              .firstWhereOrNull((st) => st.dateTime.hour == hour) ??
+          scheduledTasks.firstWhereOrNull((st) => st.dateTime.hour == hour);
 
       if (toRemove == null) return;
 
@@ -314,19 +316,25 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                       : textColors[tasks[i].dateTime.hour]
                   : Colors.black;
         }
-        taskTitles[tasks[i].dateTime.hour] =
-            tasks[i].exception
-                ? isEdditing && taskTitles[tasks[i].dateTime.hour] == ''
-                    ? tasks[i].task.title
-                    : taskTitles[tasks[i].dateTime.hour]
-                : tasks[i].task.title;
         taskComments[tasks[i].dateTime.hour] =
             tasks[i].exception
                 ? isEdditing && taskTitles[tasks[i].dateTime.hour] == ''
                     ? tasks[i].task.comment ?? ''
                     : taskComments[tasks[i].dateTime.hour]
                 : tasks[i].task.comment ?? '';
-        taskIDs[tasks[i].dateTime.hour] = tasks[i].task.id;
+
+        taskIDs[tasks[i].dateTime.hour] =
+            tasks[i].exception
+                ? isEdditing && taskTitles[tasks[i].dateTime.hour] == ''
+                    ? tasks[i].task.id
+                    : taskIDs[tasks[i].dateTime.hour]
+                : tasks[i].task.id;
+        taskTitles[tasks[i].dateTime.hour] =
+            tasks[i].exception
+                ? isEdditing && taskTitles[tasks[i].dateTime.hour] == ''
+                    ? tasks[i].task.title
+                    : taskTitles[tasks[i].dateTime.hour]
+                : tasks[i].task.title;
         // else {
         //   textColors[i] = Colors.white;
         // }
@@ -832,8 +840,7 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
 
                               if (isTempPlaced) {
                                 showDelete = true;
-                                showException =
-                                    0; 
+                                showException = 0;
                               } else if (scheduled != null) {
                                 // リピートなしの通常タスク
                                 if (scheduled.task.repete == RepeteType.none) {
@@ -854,8 +861,10 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                   if (isEdditing) {
                                     if (scheduled.exception) {
                                       // 例外ブロック (exception == true) だが、上に何も置かれていない場合だけ表示
-                                      if (!taskHourMap.containsKey(index)) {
+                                      if (!taskHourMap.containsKey(index) &&
+                                          scheduled.task.id == taskIDs[index]) {
                                         showException = 1;
+                                        showDelete = true; // 例外ブロックは削除可能
                                       } else {
                                         showException = 0; // 上に別のタスクがあるなら非表示
                                       }
