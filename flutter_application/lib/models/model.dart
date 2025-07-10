@@ -17,21 +17,66 @@ List<ScheduledTask> getScheduledTasksForDay(DateTime day, List<Task> tasks) {
       switch (task.repete) {
         case RepeteType.none:
           if (isSameDay(dt, day)) {
-            scheduledTasks.add(ScheduledTask(task: task, dateTime: dt));
+            scheduledTasks.add(
+              ScheduledTask(task: task, dateTime: dt, exception: false),
+            );
           }
           break;
 
         case RepeteType.daily:
           if (dt.isBefore(day) || isSameDay(dt, day)) {
-            final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
-            scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
+            final repeated = DateTime(
+              day.year,
+              day.month,
+              day.day,
+              dt.hour,
+              dt.minute,
+            );
+            if (task.excepts?.any(
+                  (ex) =>
+                      ex.year == repeated.year &&
+                      ex.month == repeated.month &&
+                      ex.day == repeated.day &&
+                      ex.hour == repeated.hour,
+                ) ==
+                true) {
+              scheduledTasks.add(
+                ScheduledTask(task: task, dateTime: repeated, exception: true),
+              );
+            } else {
+              scheduledTasks.add(
+                ScheduledTask(task: task, dateTime: repeated, exception: false),
+              );
+            }
           }
           break;
 
         case RepeteType.weekly:
-          if ((dt.isBefore(day) || isSameDay(dt, day)) && dt.weekday == day.weekday) {
-            final repeated = DateTime(day.year, day.month, day.day, dt.hour, dt.minute);
-            scheduledTasks.add(ScheduledTask(task: task, dateTime: repeated));
+          if ((dt.isBefore(day) || isSameDay(dt, day)) &&
+              dt.weekday == day.weekday) {
+            final repeated = DateTime(
+              day.year,
+              day.month,
+              day.day,
+              dt.hour,
+              dt.minute,
+            );
+            if (task.excepts?.any(
+                  (ex) =>
+                      ex.year == repeated.year &&
+                      ex.month == repeated.month &&
+                      ex.day == repeated.day &&
+                      ex.hour == repeated.hour,
+                ) ==
+                true) {
+              scheduledTasks.add(
+                ScheduledTask(task: task, dateTime: repeated, exception: true),
+              );
+            } else {
+              scheduledTasks.add(
+                ScheduledTask(task: task, dateTime: repeated, exception: false),
+              );
+            }
           }
           break;
       }
@@ -42,43 +87,36 @@ List<ScheduledTask> getScheduledTasksForDay(DateTime day, List<Task> tasks) {
   return scheduledTasks;
 }
 
-
-
 List<Task> getNotPlacedTask(List<Task> tasks) {
   final List<Task> notPlacedTasks = [];
 
   for (final task in tasks) {
     final hours = task.requiredHours;
-    if(task.startTime == null) {
+    if (task.startTime == null) {
       notPlacedTasks.add(task);
-    }
-    else {
+    } else {
       final placedTasks = task.startTime!.length;
-      if(placedTasks < hours) {
+      if (placedTasks < hours) {
         notPlacedTasks.add(task);
       }
-    }   
-
+    }
   }
   return notPlacedTasks;
 }
-
 
 int getnumOfNotPlacedTask(Task task) {
   int notPlacedNum = 0;
   final hours = task.requiredHours;
 
-  if(task.startTime == null) {
+  if (task.startTime == null) {
     notPlacedNum = hours;
-  }
-  else {
+  } else {
     final placedTasks = task.startTime!.length;
     notPlacedNum = hours - placedTasks;
-  }   
-  
+  }
+
   return notPlacedNum;
 }
-
 
 /// DateTime → int（Unix timestamp）
 int toInt(DateTime dateTime) {

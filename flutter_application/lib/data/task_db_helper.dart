@@ -20,7 +20,7 @@ class TaskDBHelper {
     final path = join(dbPath, 'tasks.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE tasks(
@@ -31,17 +31,26 @@ class TaskDBHelper {
             color INTEGER,
             repete INTEGER,
             comment TEXT,
-            startTime TEXT
+            startTime TEXT,
+            excepts TEXT
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE tasks ADD COLUMN excepts TEXT');
+        }
       },
     );
   }
 
   Future<void> insertTask(Task task) async {
     final database = await db;
-    await database.insert('tasks', task.toMap(withoutId: true),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await database.insert(
+      'tasks',
+      task.toMap(withoutId: true),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Task>> getTasks() async {
@@ -52,8 +61,12 @@ class TaskDBHelper {
 
   Future<void> updateTask(Task task) async {
     final database = await db;
-    await database.update('tasks', task.toMap(),
-        where: 'id = ?', whereArgs: [task.id]);
+    await database.update(
+      'tasks',
+      task.toMap(),
+      where: 'id = ?',
+      whereArgs: [task.id],
+    );
   }
 
   Future<void> deleteTask(int id) async {

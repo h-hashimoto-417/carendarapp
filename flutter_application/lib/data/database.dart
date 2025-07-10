@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
-// 曜日のデータ
-List<String> weekdayName = ['', 'MON', 'TUE', 'WED', 'THUR', 'FRY', 'SAT', 'SUN'];
 
+// 曜日のデータ
+List<String> weekdayName = [
+  '',
+  'MON',
+  'TUE',
+  'WED',
+  'THUR',
+  'FRY',
+  'SAT',
+  'SUN',
+];
 
 final taskColors = [
   Colors.yellow,
@@ -16,12 +25,7 @@ final taskColors = [
   Colors.black,
 ];
 
-
-enum RepeteType{
-  none,
-  daily,
-  weekly,
-}
+enum RepeteType { none, daily, weekly }
 
 class Task {
   final int id;
@@ -32,6 +36,7 @@ class Task {
   final RepeteType repete;
   final String? comment;
   final List<DateTime>? startTime;
+  final List<DateTime>? excepts; // 例外日（リピートタスクで、特定の日を除外したい場合に使用）
 
   const Task({
     this.id = 0,
@@ -42,6 +47,7 @@ class Task {
     this.repete = RepeteType.none,
     this.comment,
     this.startTime,
+    this.excepts,
   });
   Task copyWith({
     int? id,
@@ -52,6 +58,7 @@ class Task {
     RepeteType? repete,
     String? comment,
     List<DateTime>? startTime,
+    List<DateTime>? excepts,
   }) {
     return Task(
       id: id ?? this.id,
@@ -62,6 +69,7 @@ class Task {
       repete: repete ?? this.repete,
       comment: comment ?? this.comment,
       startTime: startTime ?? this.startTime,
+      excepts: excepts ?? this.excepts,
     );
   }
 
@@ -74,6 +82,7 @@ class Task {
       'repete': repete.index,
       'comment': comment,
       'startTime': startTime?.map((dt) => dt.toIso8601String()).join(','),
+      'excepts': excepts?.map((dt) => dt.toIso8601String()).join(','),
     };
 
     if (!withoutId) {
@@ -91,24 +100,27 @@ class Task {
     color: map['color'],
     repete: RepeteType.values[map['repete']],
     comment: map['comment'],
-    startTime: map['startTime'] != null && map['startTime'] != ''
-        ? (map['startTime'] as String)
-            .split(',')
-            .map((e) => DateTime.parse(e))
-            .toList()
-        : null,
+    startTime:
+        map['startTime'] != null && map['startTime'] != ''
+            ? (map['startTime'] as String)
+                .split(',')
+                .map((e) => DateTime.parse(e))
+                .toList()
+            : null,
+    excepts:
+        map['excepts'] != null && map['excepts'] != ''
+            ? (map['excepts'] as String)
+                .split(',')
+                .map((e) => DateTime.parse(e))
+                .toList()
+            : null,
   );
-
 }
 
 class ScheduledTask {
-  final Task task;        // 元のタスク
-  final DateTime dateTime; // このスケジュールの開始日時
+  final Task task; // 元のタスク
+  final DateTime dateTime; // このスケジュールの開始日時]
+  final bool exception;
 
-  ScheduledTask({
-    required this.task,
-    required this.dateTime,
-  });
-
-
+  ScheduledTask({required this.task, required this.dateTime, required this.exception});
 }

@@ -74,6 +74,7 @@ class ScreenCalendar extends HookConsumerWidget {
       final tasks = getScheduledTasksForDay(date, taskProvider);
       final uniqueTasks = <int, ScheduledTask>{};
       for (var task in tasks) {
+        if(task.exception) continue; // 例外タスクは除外
         uniqueTasks[task.task.id] =
             task; // 同じIDなら上書き（最初に出てきたものを優先したいなら.containsKeyで判定）
       }
@@ -249,12 +250,15 @@ class ScreenCalendar extends HookConsumerWidget {
                           ),
                         ),
                       ),
-
-                    ...tasks.map((scheduledTask) {
+                    ...tasks.where((scheduledTask) => !scheduledTask.exception).map((scheduledTask) {
                       final task = scheduledTask.task;
                       final dt = scheduledTask.dateTime;
                       return ListTile(
-                        title: Text('${dt.hour}:00　${task.title}'),
+                        title: Text('${dt.hour}:00　${task.title}', 
+                          style: TextStyle(
+                            color: taskColors[task.color.clamp(0, 9)],
+                          ),
+                        ),
                         subtitle: Text(
                           task.comment != null ? '${task.comment}' : '',
                         ),
