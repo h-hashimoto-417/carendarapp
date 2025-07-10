@@ -72,7 +72,13 @@ class ScreenCalendar extends HookConsumerWidget {
 
     List<Widget> buildTaskTitles(DateTime date) {
       final tasks = getScheduledTasksForDay(date, taskProvider);
-      final displayTasks = tasks.take(3).toList();
+      final uniqueTasks = <int, ScheduledTask>{};
+      for (var task in tasks) {
+        if(task.exception) continue; // 例外タスクは除外
+        uniqueTasks[task.task.id] =
+            task; // 同じIDなら上書き（最初に出てきたものを優先したいなら.containsKeyで判定）
+      }
+      final displayTasks = uniqueTasks.values.take(3).toList();
 
       if (displayTasks.isEmpty) return [];
 
@@ -102,7 +108,9 @@ class ScreenCalendar extends HookConsumerWidget {
               context,
 
               MaterialPageRoute(
-                builder: (context) => ScreenHomeToday(today: DateTime.now(), editmode: false,),
+                builder:
+                    (context) =>
+                        ScreenHomeToday(today: DateTime.now(), editmode: false),
               ),
             );
           },
@@ -142,14 +150,20 @@ class ScreenCalendar extends HookConsumerWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 2,
+                ),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     Center(
                       child: Text(
                         '${selectedDayState.value.year}/${selectedDayState.value.month}/${selectedDayState.value.day}の予定',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
                     Positioned(
@@ -179,14 +193,13 @@ class ScreenCalendar extends HookConsumerWidget {
                 ),
               ),
 
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                //   child: Text(
-                //     '締切のあるタスク: ${deadlineTasks.length}件',
-                //     style: const TextStyle(fontWeight: FontWeight.bold),
-                //   ),
-                // ),
-
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              //   child: Text(
+              //     '締切のあるタスク: ${deadlineTasks.length}件',
+              //     style: const TextStyle(fontWeight: FontWeight.bold),
+              //   ),
+              // ),
               const Divider(),
 
               Expanded(
@@ -221,7 +234,8 @@ class ScreenCalendar extends HookConsumerWidget {
                                 ...deadlineTasks.asMap().entries.map((entry) {
                                   final i = entry.key;
                                   final task = entry.value;
-                                  final color = taskColors[task.color.clamp(0, 9)];
+                                  final color =
+                                      taskColors[task.color.clamp(0, 9)];
                                   final title = task.title;
                                   return TextSpan(
                                     text:
@@ -236,12 +250,15 @@ class ScreenCalendar extends HookConsumerWidget {
                           ),
                         ),
                       ),
-
-                    ...tasks.map((scheduledTask) {
+                    ...tasks.where((scheduledTask) => !scheduledTask.exception).map((scheduledTask) {
                       final task = scheduledTask.task;
                       final dt = scheduledTask.dateTime;
                       return ListTile(
-                        title: Text('${dt.hour}:00　${task.title}'),
+                        title: Text('${dt.hour}:00　${task.title}', 
+                          style: TextStyle(
+                            color: taskColors[task.color.clamp(0, 9)],
+                          ),
+                        ),
                         subtitle: Text(
                           task.comment != null ? '${task.comment}' : '',
                         ),
@@ -304,15 +321,16 @@ class ScreenCalendar extends HookConsumerWidget {
                   taskProvider
                       .where(
                         (task) =>
-                            task.deadline != null && isSameDay(task.deadline!, date),
+                            task.deadline != null &&
+                            isSameDay(task.deadline!, date),
                       )
                       .toList();
               return Container(
-                
                 decoration: BoxDecoration(
-                  color: isSameDay(date, DateTime.now())
-                      ? Colors.orange[100]
-                      : Colors.white,
+                  color:
+                      isSameDay(date, DateTime.now())
+                          ? Colors.orange[100]
+                          : Colors.white,
                   border: Border.all(color: Colors.blue, width: 2),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -358,7 +376,8 @@ class ScreenCalendar extends HookConsumerWidget {
                   taskProvider
                       .where(
                         (task) =>
-                            task.deadline != null && isSameDay(task.deadline!, date),
+                            task.deadline != null &&
+                            isSameDay(task.deadline!, date),
                       )
                       .toList();
               return Container(
@@ -408,18 +427,45 @@ class ScreenCalendar extends HookConsumerWidget {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left),
-                    onPressed: goToPreviousMonth,
-                  ),
+                  // Visibility(
+                  //   visible: (focusedDayState.value.year == 2000 &&
+                  //       focusedDayState.value.month == 1)? false : true,
+                  //   child:
+                  //     IconButton(
+                  //       icon: const Icon(Icons.chevron_left),
+                  //       onPressed: goToPreviousMonth,
+                  //     ),
+                  // ) ,
+                  if (focusedDayState.value.year == 2000 &&
+                      focusedDayState.value.month == 1)
+                    SizedBox(height: 10, width: 47)
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: goToPreviousMonth,
+                    ),
+
                   Text(
                     '${focusedDayState.value.month}',
                     style: const TextStyle(fontSize: 20),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right),
-                    onPressed: goToNextMonth,
-                  ),
+                  // Visibility(
+                  //   visible: (focusedDayState.value.year == 2100 &&
+                  //       focusedDayState.value.month == 12)? false : true,
+                  //   child:
+                  //     IconButton(
+                  //       icon: const Icon(Icons.chevron_right),
+                  //       onPressed: goToNextMonth,
+                  //     ),
+                  // )
+                  if (focusedDayState.value.year == 2100 &&
+                      focusedDayState.value.month == 12)
+                    SizedBox(height: 10, width: 47)
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: goToNextMonth,
+                    ),
                 ],
               );
             },

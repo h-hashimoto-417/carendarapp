@@ -5,9 +5,7 @@ import 'package:flutter_application/data/database.dart';
 part 'data_manager.g.dart';
 
 @riverpod
-
-
-class TaskController extends _$TaskController{
+class TaskController extends _$TaskController {
   // final int _nextID = 8;
   // final List<Task> sampleTask = [
   // //   Task(id: 1, title: 'Sample', requiredHours: 1, color: 1,deadline: DateTime.utc(2025, 7, 5), repete: RepeteType.daily, startTime: [DateTime.utc(2025, 6, 12, 12)]),
@@ -20,7 +18,7 @@ class TaskController extends _$TaskController{
   // ];
 
   @override
-  List<Task> build(){
+  List<Task> build() {
     state = [];
     loadTasksFromDB();
     return state;
@@ -45,6 +43,102 @@ class TaskController extends _$TaskController{
     await loadTasksFromDB();
   }
 
-  
-}
+  Future<void> cleanAllConflictingSingleTimeTasks() async {
+    final List<Task> updatedTasks = [];
+    final List<Task> currentTasks = [...state];
 
+    // すべての単発タスクやリピートタスクを含む日時を収集
+    final Set<DateTime> occupiedTimes = {};
+
+    for (final task in currentTasks) {
+      final times = task.startTime;
+      if (times == null) continue;
+
+      for (final dt in times) {
+        if (task.repete == RepeteType.none) {
+          occupiedTimes.add(dt);
+        } else {
+          final now = DateTime.now();
+          final deadline = task.deadline ?? DateTime.utc(2100);
+
+          for (int i = -30; i <= 90; i++) {
+            final day = now.add(Duration(days: i));
+            if (day.isAfter(deadline)) continue;
+
+            if (task.repete == RepeteType.daily ||
+                (task.repete == RepeteType.weekly &&
+                    day.weekday == dt.weekday)) {
+              final repeated = DateTime(
+                day.year,
+                day.month,
+                day.day,
+                dt.hour,
+                dt.minute,
+              );
+              occupiedTimes.add(repeated);
+            }
+          }
+        }
+      }
+    }
+
+    // リピートタスクに対して衝突チェック（自身の繰り返し先は除外する）
+    for (final task in currentTasks) {
+      if (task.repete == RepeteType.none || task.startTime == null) continue;
+
+      final now = DateTime.now();
+      final deadline = task.deadline ?? DateTime.utc(2100);
+      final newExcepts =
+          task.excepts != null ? [...task.excepts!] : <DateTime>[];
+
+      for (final dt in task.startTime!) {
+        for (int i = -30; i <= 90; i++) {
+          final day = now.add(Duration(days: i));
+          if (day.isAfter(deadline)) continue;
+
+          if (task.repete == RepeteType.daily ||
+              (task.repete == RepeteType.weekly && day.weekday == dt.weekday)) {
+            final repeated = DateTime(
+              day.year,
+              day.month,
+              day.day,
+              dt.hour,
+              dt.minute,
+            );
+
+            // 他のタスクに占有されているが、自分のものではない
+            final isOccupied = currentTasks.any((other) {
+              if (other.id == task.id) return false; // 自分自身は除外
+              if (other.startTime == null) return false;
+              return other.startTime!.any(
+                (t) =>
+                    t.year == repeated.year &&
+                    t.month == repeated.month &&
+                    t.day == repeated.day &&
+                    t.hour == repeated.hour &&
+                    t.minute == repeated.minute,
+              );
+            });
+
+            if (isOccupied && !newExcepts.contains(repeated)) {
+              newExcepts.add(repeated);
+            }
+          }
+        }
+      }
+
+      if (newExcepts.length != (task.excepts?.length ?? 0)) {
+        final updated = task.copyWith(excepts: newExcepts);
+        updatedTasks.add(updated);
+      }
+    }
+
+    // DBに反映
+    for (final task in updatedTasks) {
+      await TaskDBHelper().updateTask(task);
+    }
+
+    // 状態更新
+    await loadTasksFromDB();
+  }
+}
