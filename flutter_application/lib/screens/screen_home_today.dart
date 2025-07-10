@@ -955,8 +955,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                           ),
                                           if (showException == 1)
                                             Positioned(
-                                              left: 10,
-                                              top: 10,
+                                              left: 5,
+                                              top: 5,
                                               child: IconButton(
                                                 icon: Icon(
                                                   Icons.remove_circle_outline,
@@ -973,8 +973,8 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
 
                                           if (showException == 2)
                                             Positioned(
-                                              left: 10,
-                                              top: 10,
+                                              left: 5,
+                                              top: 5,
                                               child: IconButton(
                                                 icon: Icon(
                                                   Icons.remove_circle,
@@ -992,12 +992,13 @@ class _ScreenHomeTodayState extends ConsumerState<ScreenHomeToday> {
                                                   Colors.white &&
                                               showDelete)
                                             Positioned(
-                                              right: 10,
-                                              top: 10,
+                                              right: 5,
+                                              top: 5,
                                               child: IconButton(
                                                 icon: Icon(
                                                   Icons.delete,
                                                   color: textColors[index],
+                                                  size: 35,
                                                 ),
                                                 onPressed: () {
                                                   if (isEdditing &&
